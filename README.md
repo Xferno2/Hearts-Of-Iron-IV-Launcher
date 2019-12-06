@@ -1,4 +1,4 @@
-# Hearts-Of-Iron-IV-Launcher
+# Hearts of Iron IV Launcher
 
 This project is completly bare bones. Only enabling and disabling mods work right now.
 
