@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Net.Http;
 
 namespace Hoi4_Launcher
 {
@@ -22,27 +23,27 @@ namespace Hoi4_Launcher
         private static string Hoi4_Doc = Path.Combine(ParadoxFolder, "Hearts of Iron IV");
         private static string Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
         private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mods_registry.json");
+        private static dlcModel[] dis_dlc = null;
 
-        ThreadStart threadStart;
-        Thread myUpdatedThread;
 
-        static loadItems data = new loadItems();
+        static launchSettings data = new launchSettings();
         public Form1()
         {
             InitializeComponent();
-            loadMods();
+            dis_dlc = GetDLCs();
+            load();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
-        public loadItems load_items()
+        public launchSettings load_items()
         {
-            loadItems obj;
+            launchSettings obj;
 
             string data = File.ReadAllText(Hoi4_Enb_Mods);
-            obj = JsonConvert.DeserializeObject<loadItems>(data);
+            obj = JsonConvert.DeserializeObject<launchSettings>(data);
             return obj;
         }
 
@@ -51,15 +52,12 @@ namespace Hoi4_Launcher
             string data = File.ReadAllText(Hoi4_Mods);
             JObject mods = JObject.Parse(data);
 
-            // get JSON result objects into a list
             IList<JToken> results = mods.Children().Children().ToList();
 
-            // serialize JSON results into .NET objects
             IList<modInfo> modsList = new List<modInfo>();
 
             foreach (JToken result in results)
             {
-                // JToken.ToObject is a helper method that uses JsonSerializer internally
                 modInfo mod = result.ToObject<modInfo>();
                 modsList.Add(mod);
             }
@@ -70,7 +68,8 @@ namespace Hoi4_Launcher
         {
         }
 
-        private void loadMods() {
+        private void load() {
+            //Load Mods
             var items = load_items();
             var mods = load_mods_info();
             int enabled_mods = 0;
@@ -79,8 +78,22 @@ namespace Hoi4_Launcher
                 bool enabled = false;
                 if (items.enabled_mods.Contains(mod.gameRegistryId)) { enabled = true; enabled_mods++; }
                 list_mods.Items.Add(mod.displayName, enabled);
+                //var cacheimg = cacheImages(mod.displayName, "0").response.publishedfiledetails.First();
+                //var img = cacheimg.previews.First();
+                //var x  = img.url;
             }
             label_mods.Text = "Mods: " + enabled_mods + "/" + mods.Length;
+
+            //Load DLC
+            foreach (var dlc in dis_dlc) {
+                bool enabled = true;
+                if (items.disabled_dlcs.Contains(dlc.path)) { enabled = false; }
+                list_dlc.Items.Add(dlc.name,enabled);
+            }
+            //Load LHSetthings
+            string data = File.ReadAllText(@"launcher-settings.json");
+            var obj = JsonConvert.DeserializeObject<LHSettings>(data);
+            label_version.Text += " " + obj.version;
         }
         private void TextBox1_TextChanged(object sender, EventArgs e)
         {
@@ -89,21 +102,7 @@ namespace Hoi4_Launcher
 
         private void Button_play_Click(object sender, EventArgs e)
         {
-            var mods = load_mods_info();
-            var enabled_mods = new List<string>();
-            foreach (var mod in mods)
-            {
-                if (list_mods.CheckedItems.Contains(mod.displayName))
-                {
-                    if (mod.gameRegistryId != null)
-                    enabled_mods.Add(mod.gameRegistryId);
-                }
-            }
-            var config = load_items();
-            config.enabled_mods = enabled_mods;
-            SerializeConfig(config);
-            Process.Start(@"hoi4.exe");
-            Application.Exit();
+
         }
 
         public void SerializeConfig(object x)
@@ -113,6 +112,75 @@ namespace Hoi4_Launcher
             settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
             File.WriteAllText(Hoi4_Enb_Mods, JsonConvert.SerializeObject(x, Formatting.Indented, settings));
+        }
+
+        private void List_mods_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+
+        public string GetURL(string url)
+        {
+            var client = new HttpClient();
+            return client.GetAsync(url).Result.Content.ReadAsStringAsync().Result;
+        }
+
+        public dlcModel[] GetDLCs() {
+            List<dlcModel> dlcs = new List<dlcModel>();
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "dlc");
+
+                foreach (var dir in Directory.GetDirectories(path)) {
+                try
+                {
+                    DirectoryInfo dInfo = new DirectoryInfo(dir);
+                    var dlcFullPath = dInfo.GetFilesByExtensions(".dlc").First().FullName;
+                    var dlc = new dlcModel();
+                    var x = File.ReadLines(dlcFullPath);
+                    dlc.name = x.First().Split('"')[1].Replace('"', ' ');
+                    dlc.path = x.ElementAt(1).Split('"')[1].Replace('"', ' ').Split('.').First() + ".dlc";
+                    var party = x.ElementAt(x.Count() - 2).Split('=')[1].Replace(" ", "");
+                    if ( party == "yes")
+                    { dlc._3rdparty = true; userControl11._3rdParty = true; }
+                    else { dlc._3rdparty = false; }
+                    dlcs.Add(dlc);
+                }
+            catch (Exception ex)
+            {
+            }
+        }
+            return dlcs.ToArray();
+        }
+
+        private void UserControl11_Click(object sender, EventArgs e)
+        {
+            var mods = load_mods_info();
+            var enabled_mods = new List<string>();
+            foreach (var mod in mods)
+            {
+                if (list_mods.CheckedItems.Contains(mod.displayName))
+                {
+                    if (mod.gameRegistryId != null)
+                        enabled_mods.Add(mod.gameRegistryId);
+                }
+            }
+            var disabled_dlc = new List<string>();
+            foreach (var dlc in list_dlc.Items)
+            {
+                if (!list_dlc.CheckedItems.Contains(dlc))
+                {
+                    foreach (var disdlc in dis_dlc)
+                    {
+                        if (disdlc.name == dlc.ToString()) { disabled_dlc.Add(disdlc.path); }
+                    }
+                }
+            }
+            var config = load_items();
+            config.enabled_mods = enabled_mods;
+            config.disabled_dlcs = disabled_dlc;
+            SerializeConfig(config);
+            Process.Start(@"hoi4.exe");
+            Application.Exit();
         }
     }
 

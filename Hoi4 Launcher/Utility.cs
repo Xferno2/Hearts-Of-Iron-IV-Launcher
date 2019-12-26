@@ -11,7 +11,7 @@ namespace Hoi4_Launcher
 {
     public static class Utility
     {
-        public static IEnumerable<FileInfo> GetFilesByExtensions(this DirectoryInfo dir, RichTextBox textBox, params string[] extensions)
+        public static IEnumerable<FileInfo> GetFilesByExtensions(this DirectoryInfo dir, params string[] extensions)
         {
             try
             {
@@ -20,16 +20,16 @@ namespace Hoi4_Launcher
                 IEnumerable<FileInfo> files = dir.EnumerateFiles();
                 return files.Where(f => extensions.Contains(f.Extension));
             }
-            catch (Exception ex) { textBox.Text += ex; return null; }
+            catch (Exception ex) { return null; }
         }
 
-        public static Image GetImage(string dir, RichTextBox textBox) {
+        public static Image GetImage(string dir, params string[] extensions) {
 
             try {
                 DirectoryInfo dInfo = new DirectoryInfo(@dir);
-                var imgDir = dInfo.GetFilesByExtensions(textBox:textBox, ".png", ".jpg", ".jpeg");
+                var imgDir = dInfo.GetFilesByExtensions(extensions);
                 return Image.FromFile(imgDir.First().FullName);
-            } catch (Exception ex) { textBox.Text += ex; return null; };
+            } catch (Exception ex) { return null; };
         }
     }
 }
