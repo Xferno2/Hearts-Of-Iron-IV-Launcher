@@ -22,7 +22,7 @@ namespace Hoi4_Launcher
         private static string ParadoxFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive");
         private static string Hoi4_Doc = Path.Combine(ParadoxFolder, "Hearts of Iron IV");
         private static string Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
-        private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mods_registry.json");
+        private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mod");
         private static dlcModel[] dis_dlc = null;
 
 
@@ -47,21 +47,24 @@ namespace Hoi4_Launcher
             return obj;
         }
 
-        public modInfo[] load_mods_info() {
-
-            string data = File.ReadAllText(Hoi4_Mods);
-            JObject mods = JObject.Parse(data);
-
-            IList<JToken> results = mods.Children().Children().ToList();
-
-            IList<modInfo> modsList = new List<modInfo>();
-
-            foreach (JToken result in results)
+        public List<newModInfo> load_mods_info() {
+            List<newModInfo> mods = new List<newModInfo>();
+            DirectoryInfo d = new DirectoryInfo(Hoi4_Mods);
+            FileInfo[] Files = d.GetFiles("*.mod");
+            foreach (FileInfo file in Files)
             {
-                modInfo mod = result.ToObject<modInfo>();
-                modsList.Add(mod);
+                var mod = new newModInfo();
+                mod.gameRegestryMod = "mod/" + file.Name;
+                var modFiles = File.ReadAllLines(file.FullName);
+                foreach (var modFile in modFiles) {
+                    if (modFile.Contains("name")) {
+                        mod.displayName = modFile.Split('=')[1].Replace("\"", "");
+                        break;
+                    }
+                }
+                mods.Add(mod);
             }
-            return modsList.ToArray();
+            return mods;
         }
 
         private void BackgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -76,13 +79,10 @@ namespace Hoi4_Launcher
             foreach (var mod in mods)
             {
                 bool enabled = false;
-                if (items.enabled_mods.Contains(mod.gameRegistryId)) { enabled = true; enabled_mods++; }
+                if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
                 list_mods.Items.Add(mod.displayName, enabled);
-                //var cacheimg = cacheImages(mod.displayName, "0").response.publishedfiledetails.First();
-                //var img = cacheimg.previews.First();
-                //var x  = img.url;
             }
-            label_mods.Text = "Mods: " + enabled_mods + "/" + mods.Length;
+            label_mods.Text = "Mods: " + enabled_mods + "/" + mods.Count;
 
             //Load DLC
             foreach (var dlc in dis_dlc) {
@@ -160,8 +160,8 @@ namespace Hoi4_Launcher
             {
                 if (list_mods.CheckedItems.Contains(mod.displayName))
                 {
-                    if (mod.gameRegistryId != null)
-                        enabled_mods.Add(mod.gameRegistryId);
+                    if (mod.displayName != null)
+                        enabled_mods.Add(mod.gameRegestryMod);
                 }
             }
             var disabled_dlc = new List<string>();
@@ -181,6 +181,11 @@ namespace Hoi4_Launcher
             SerializeConfig(config);
             Process.Start(@"hoi4.exe");
             Application.Exit();
+        }
+
+        private void userControl11_Load(object sender, EventArgs e)
+        {
+
         }
     }
 

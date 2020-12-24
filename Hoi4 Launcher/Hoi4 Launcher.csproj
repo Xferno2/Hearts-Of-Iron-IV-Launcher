@@ -62,7 +62,7 @@
     <Compile Include="Model\itemPrew.cs" />
     <Compile Include="Model\launchSettings.cs" />
     <Compile Include="Model\LHSettings.cs" />
-    <Compile Include="Model\modInfo.cs" />
+    <Compile Include="Model\newModInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

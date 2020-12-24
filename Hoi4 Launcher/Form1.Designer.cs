@@ -43,8 +43,8 @@
             this.textBox1 = new System.Windows.Forms.RichTextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.userControl11 = new ImgButton.UserControl1();
             this.label_version = new System.Windows.Forms.ToolStripStatusLabel();
+            this.userControl11 = new ImgButton.UserControl1();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
@@ -69,6 +69,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -83,7 +84,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(529, 395);
+            this.tabPage2.Size = new System.Drawing.Size(533, 395);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "DLC";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -94,7 +95,7 @@
             this.list_dlc.FormattingEnabled = true;
             this.list_dlc.Location = new System.Drawing.Point(3, 3);
             this.list_dlc.Name = "list_dlc";
-            this.list_dlc.Size = new System.Drawing.Size(523, 389);
+            this.list_dlc.Size = new System.Drawing.Size(527, 389);
             this.list_dlc.TabIndex = 0;
             // 
             // tabPage3
@@ -105,7 +106,7 @@
             this.tabPage3.Controls.Add(this.label_mods);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(529, 395);
+            this.tabPage3.Size = new System.Drawing.Size(533, 395);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Mods";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -116,7 +117,7 @@
             this.list_mods.FormattingEnabled = true;
             this.list_mods.Location = new System.Drawing.Point(0, 46);
             this.list_mods.Name = "list_mods";
-            this.list_mods.Size = new System.Drawing.Size(529, 349);
+            this.list_mods.Size = new System.Drawing.Size(533, 349);
             this.list_mods.Sorted = true;
             this.list_mods.TabIndex = 4;
             this.list_mods.SelectedIndexChanged += new System.EventHandler(this.List_mods_SelectedIndexChanged);
@@ -152,7 +153,7 @@
             this.tabPage4.Location = new System.Drawing.Point(4, 22);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(529, 395);
+            this.tabPage4.Size = new System.Drawing.Size(533, 395);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Settings";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -163,7 +164,7 @@
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage5.Size = new System.Drawing.Size(529, 395);
+            this.tabPage5.Size = new System.Drawing.Size(533, 395);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Log";
             this.tabPage5.UseVisualStyleBackColor = true;
@@ -174,7 +175,7 @@
             this.textBox1.Location = new System.Drawing.Point(3, 3);
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(523, 389);
+            this.textBox1.Size = new System.Drawing.Size(527, 389);
             this.textBox1.TabIndex = 1;
             this.textBox1.Text = "";
             // 
@@ -194,6 +195,12 @@
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
+            // label_version
+            // 
+            this.label_version.Name = "label_version";
+            this.label_version.Size = new System.Drawing.Size(48, 17);
+            this.label_version.Text = "Version:";
+            // 
             // userControl11
             // 
             this.userControl11._3rdParty = false;
@@ -204,13 +211,8 @@
             this.userControl11.Name = "userControl11";
             this.userControl11.Size = new System.Drawing.Size(411, 79);
             this.userControl11.TabIndex = 4;
+            this.userControl11.Load += new System.EventHandler(this.userControl11_Load);
             this.userControl11.Click += new System.EventHandler(this.UserControl11_Click);
-            // 
-            // label_version
-            // 
-            this.label_version.Name = "label_version";
-            this.label_version.Size = new System.Drawing.Size(48, 17);
-            this.label_version.Text = "Version:";
             // 
             // Form1
             // 
