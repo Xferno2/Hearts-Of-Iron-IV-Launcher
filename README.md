@@ -5,3 +5,6 @@ This project is completly bare bones and pure spaghetti code. It's something I m
 ## How to use the launcher
 
 Simply compile the project and copy from `Debug` folder everything into the Hearts of Iron IV root folder. You will have to run the steam launcher or pdx launcher once to generate mods files. After that you can open `Hoi4 Launcher.exe` and you are good to go.
+
+
+`Images that are used in this project belong to Paradox Interactive.`
