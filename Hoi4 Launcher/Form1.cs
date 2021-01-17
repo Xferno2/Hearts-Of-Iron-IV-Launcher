@@ -14,6 +14,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Http;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace Hoi4_Launcher
 {
@@ -24,14 +26,16 @@ namespace Hoi4_Launcher
         private static string Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
         private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mod");
         private static dlcModel[] dis_dlc = null;
+        private static int modsCount;
 
+        private static LHSettings gameSettings = new LHSettings();
+
+        Timer updateUI = new Timer(100);
 
         static launchSettings data = new launchSettings();
         public Form1()
         {
             InitializeComponent();
-            dis_dlc = GetDLCs();
-            load();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -48,6 +52,7 @@ namespace Hoi4_Launcher
         }
 
         public List<newModInfo> load_mods_info() {
+            string[] stringSeparators = new string[] { "\n\t" };
             List<newModInfo> mods = new List<newModInfo>();
             DirectoryInfo d = new DirectoryInfo(Hoi4_Mods);
             FileInfo[] Files = d.GetFiles("*.mod");
@@ -55,20 +60,49 @@ namespace Hoi4_Launcher
             {
                 var mod = new newModInfo();
                 mod.gameRegestryMod = "mod/" + file.Name;
+                //if (mod.gameRegestryMod == "mod/ugc_1368243403.mod")
+                //{
+                //    Debugger.Break();
+                //}
                 var modFiles = File.ReadAllLines(file.FullName);
+                var modFileWhole = File.ReadAllText(file.FullName);
                 foreach (var modFile in modFiles) {
-                    if (modFile.Contains("name")) {
+                    if (modFile.Contains("name=")) {
                         mod.displayName = modFile.Split('=')[1].Replace("\"", "");
-                        break;
+                    }
+                    if (modFile.Contains("supported_version="))
+                    {
+                        mod.supported_version = modFile.Split('=')[1].Replace("\"", "");
+                    }
+                    if (modFile.Contains("remote_file_id="))
+                    {
+                        mod.remote_fileid = modFile.Split('=')[1].Replace("\"", "");
+                    }
+                    if (modFile.Contains("tags={"))
+                    {
+                        List<string> tagsList = new List<string>();
+                        var tagsNotFormated = removeBrackets(modFileWhole, "tags={", "}",false);
+                        var tagsFormated = tagsNotFormated.Split(stringSeparators, StringSplitOptions.None);
+                        foreach (var tag in tagsFormated) {
+                            if (tag != "")
+                            { var currentTag = removeBrackets(tag, "\"", "\"");
+                                tagsList.Add(currentTag);
+                                bool isItemInList = false;
+                                foreach (var listItem in categoriesBox.Items) {
+                                    if (listItem.ToString().ToLower() == currentTag.ToLower()) {
+                                        isItemInList = true;
+                                    }
+                                }
+                                if(!isItemInList)
+                                    categoriesBox.Items.Add(currentTag);
+                            }
+                        }
+                        mod.tags = tagsList;
                     }
                 }
                 mods.Add(mod);
             }
             return mods;
-        }
-
-        private void BackgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
-        {
         }
 
         private void load() {
@@ -82,7 +116,8 @@ namespace Hoi4_Launcher
                 if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
                 list_mods.Items.Add(mod.displayName, enabled);
             }
-            label_mods.Text = "Mods: " + enabled_mods + "/" + mods.Count;
+            modsCount = mods.Count;
+            updateModsCount(enabled_mods, modsCount);
 
             //Load DLC
             foreach (var dlc in dis_dlc) {
@@ -92,15 +127,10 @@ namespace Hoi4_Launcher
             }
             //Load LHSetthings
             string data = File.ReadAllText(@"launcher-settings.json");
-            var obj = JsonConvert.DeserializeObject<LHSettings>(data);
-            label_version.Text += " " + obj.version;
+            gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
+            label_version.Text += " " + gameSettings.version;
         }
         private void TextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Button_play_Click(object sender, EventArgs e)
         {
 
         }
@@ -127,9 +157,8 @@ namespace Hoi4_Launcher
         }
 
         public dlcModel[] GetDLCs() {
-            List<dlcModel> dlcs = new List<dlcModel>();
             var path = Path.Combine(Directory.GetCurrentDirectory(), "dlc");
-
+            List<dlcModel> dlcs = new List<dlcModel>();
                 foreach (var dir in Directory.GetDirectories(path)) {
                 try
                 {
@@ -187,6 +216,88 @@ namespace Hoi4_Launcher
         {
 
         }
-    }
 
+        private string removeBrackets(string text, string from, string to , bool tolast =true) {
+            int pFrom = text.IndexOf(from) + from.Length;
+            int pTo = 0;
+            if (tolast)
+            {
+                pTo = text.LastIndexOf(to);
+            }
+            else {
+                pTo = text.IndexOf(to);
+            }
+            try {
+                return text.Substring(pFrom, pTo - pFrom);
+            } catch (Exception ex) {
+                return "";
+            }
+        }
+
+        private void Form1_Load_1(object sender, EventArgs e)
+        {
+            dis_dlc = GetDLCs();
+            load();
+            updateUI.Elapsed += updateUI_DoWork;
+            updateUI.Start();
+        }
+
+        private void updateUI_DoWork(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                this.InvokeEx(x => updateUIinvokable());
+            }
+            catch (Exception ex) { }
+        }
+
+        private void updateModsCount(int count, int maxCount) {
+            label_mods.Text = "Mods: " + count + "/" + maxCount;
+        }
+
+     private void updateUIinvokable()
+        {
+            if (tabControl1.SelectedTab == tabPage3)
+            {
+                updateModsCount(list_mods.CheckedItems.Count, modsCount);
+            }
+            else if (tabControl1.SelectedTab == tabPage2)
+            {
+                checkFor3rdParty();
+            }
+        }
+        private void checkFor3rdParty()
+        {
+            bool is3rdParty = false;
+            foreach (var dlc in dis_dlc)
+            {
+                if (dlc._3rdparty && list_dlc.CheckedItems.Contains(dlc.name))
+                {
+                    is3rdParty = true;
+                    break;
+                }
+                else
+                    is3rdParty = false;
+            }
+            userControl11._3rdParty = is3rdParty;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+        }
+    }
 }
+    public static class ISynchronizeInvokeExtensions
+    {
+        public static void InvokeEx<T>(this T @this, Action<T> action) where T : ISynchronizeInvoke
+        {
+            if (@this.InvokeRequired)
+            {
+                @this.Invoke(action, new object[] { @this });
+            }
+            else
+            {
+                action(@this);
+            }
+        }
+    }

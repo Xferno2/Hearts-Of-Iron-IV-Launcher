@@ -35,13 +35,12 @@
             this.list_dlc = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.list_mods = new System.Windows.Forms.CheckedListBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.categoriesBox = new System.Windows.Forms.ComboBox();
             this.label_category = new System.Windows.Forms.Label();
             this.label_mods = new System.Windows.Forms.Label();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.textBox1 = new System.Windows.Forms.RichTextBox();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.label_version = new System.Windows.Forms.ToolStripStatusLabel();
             this.userControl11 = new ImgButton.UserControl1();
@@ -91,6 +90,7 @@
             // 
             // list_dlc
             // 
+            this.list_dlc.CheckOnClick = true;
             this.list_dlc.Dock = System.Windows.Forms.DockStyle.Fill;
             this.list_dlc.FormattingEnabled = true;
             this.list_dlc.Location = new System.Drawing.Point(3, 3);
@@ -101,7 +101,7 @@
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.list_mods);
-            this.tabPage3.Controls.Add(this.comboBox1);
+            this.tabPage3.Controls.Add(this.categoriesBox);
             this.tabPage3.Controls.Add(this.label_category);
             this.tabPage3.Controls.Add(this.label_mods);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
@@ -113,6 +113,7 @@
             // 
             // list_mods
             // 
+            this.list_mods.CheckOnClick = true;
             this.list_mods.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.list_mods.FormattingEnabled = true;
             this.list_mods.Location = new System.Drawing.Point(0, 46);
@@ -122,13 +123,14 @@
             this.list_mods.TabIndex = 4;
             this.list_mods.SelectedIndexChanged += new System.EventHandler(this.List_mods_SelectedIndexChanged);
             // 
-            // comboBox1
+            // categoriesBox
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(61, 10);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(385, 21);
-            this.comboBox1.TabIndex = 3;
+            this.categoriesBox.FormattingEnabled = true;
+            this.categoriesBox.Location = new System.Drawing.Point(61, 10);
+            this.categoriesBox.Name = "categoriesBox";
+            this.categoriesBox.Size = new System.Drawing.Size(385, 21);
+            this.categoriesBox.Sorted = true;
+            this.categoriesBox.TabIndex = 3;
             // 
             // label_category
             // 
@@ -179,10 +181,6 @@
             this.textBox1.TabIndex = 1;
             this.textBox1.Text = "";
             // 
-            // backgroundWorker1
-            // 
-            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.BackgroundWorker1_DoWork);
-            // 
             // statusStrip1
             // 
             this.statusStrip1.AutoSize = false;
@@ -218,7 +216,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.background;
+            this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(997, 625);
             this.Controls.Add(this.userControl11);
@@ -229,6 +227,8 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Hearts of Iron IV Launcher";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.Load += new System.EventHandler(this.Form1_Load_1);
             this.tabControl1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
@@ -248,8 +248,7 @@
         private System.Windows.Forms.Label label_mods;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.Label label_category;
-        private System.Windows.Forms.ComboBox comboBox1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.ComboBox categoriesBox;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.RichTextBox textBox1;
