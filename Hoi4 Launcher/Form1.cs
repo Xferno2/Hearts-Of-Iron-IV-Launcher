@@ -1,4 +1,6 @@
 ﻿using Hoi4_Launcher.Model;
+using Hoi4_Launcher.Utility;
+using Hoi4_Launcher.Parser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -29,19 +31,20 @@ namespace Hoi4_Launcher
         private static int modsCount;
 
         private static LHSettings gameSettings = new LHSettings();
+        private string args;
 
         Timer updateUI = new Timer(100);
 
         static launchSettings data = new launchSettings();
-        public Form1()
+        public Form1(string[] args)
         {
+            foreach (var arg in args)
+            {
+                this.args += arg + " "; 
+            }
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
         public launchSettings load_items()
         {
             launchSettings obj;
@@ -130,10 +133,6 @@ namespace Hoi4_Launcher
             gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
             label_version.Text += " " + gameSettings.version;
         }
-        private void TextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
 
         public void SerializeConfig(object x)
         {
@@ -142,18 +141,6 @@ namespace Hoi4_Launcher
             settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
             File.WriteAllText(Hoi4_Enb_Mods, JsonConvert.SerializeObject(x, Formatting.Indented, settings));
-        }
-
-        private void List_mods_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-
-        public string GetURL(string url)
-        {
-            var client = new HttpClient();
-            return client.GetAsync(url).Result.Content.ReadAsStringAsync().Result;
         }
 
         public dlcModel[] GetDLCs() {
@@ -208,13 +195,8 @@ namespace Hoi4_Launcher
             config.enabled_mods = enabled_mods;
             config.disabled_dlcs = disabled_dlc;
             SerializeConfig(config);
-            Process.Start(@"hoi4.exe");
+            Process.Start(@"hoi4.exe", args);
             Application.Exit();
-        }
-
-        private void userControl11_Load(object sender, EventArgs e)
-        {
-
         }
 
         private string removeBrackets(string text, string from, string to , bool tolast =true) {
@@ -236,6 +218,10 @@ namespace Hoi4_Launcher
 
         private void Form1_Load_1(object sender, EventArgs e)
         {
+            Logger("Application arguments: " +( String.IsNullOrEmpty(args) ? "null" : args));
+            this.DoubleBuffered = true;
+            Utility.Utility.enableDoubleBuff(tabControl1);
+            Utility.Utility.enableDoubleBuff(tabPage1);
             dis_dlc = GetDLCs();
             load();
             updateUI.Elapsed += updateUI_DoWork;
@@ -281,9 +267,9 @@ namespace Hoi4_Launcher
             }
             userControl11._3rdParty = is3rdParty;
         }
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        public void Logger(string log)
         {
+            this.textBox1.InvokeEx(tx => tx.Text += "[" + DateTime.Now + "] " + log + System.Environment.NewLine);
         }
     }
 }

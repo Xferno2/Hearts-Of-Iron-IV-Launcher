@@ -59,8 +59,8 @@
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage5);
-            this.tabControl1.ImeMode = System.Windows.Forms.ImeMode.Off;
             this.tabControl1.Location = new System.Drawing.Point(434, 40);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(541, 421);
@@ -68,14 +68,15 @@
             // 
             // tabPage1
             // 
-            this.tabPage1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.tabPage1.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabPage1.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.listBG;
+            this.tabPage1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(533, 395);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "News";
-            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // tabPage2
             // 
@@ -121,7 +122,6 @@
             this.list_mods.Size = new System.Drawing.Size(533, 349);
             this.list_mods.Sorted = true;
             this.list_mods.TabIndex = 4;
-            this.list_mods.SelectedIndexChanged += new System.EventHandler(this.List_mods_SelectedIndexChanged);
             // 
             // categoriesBox
             // 
@@ -209,7 +209,6 @@
             this.userControl11.Name = "userControl11";
             this.userControl11.Size = new System.Drawing.Size(411, 79);
             this.userControl11.TabIndex = 4;
-            this.userControl11.Load += new System.EventHandler(this.userControl11_Load);
             this.userControl11.Click += new System.EventHandler(this.UserControl11_Click);
             // 
             // Form1
@@ -227,7 +226,6 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Hearts of Iron IV Launcher";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load_1);
             this.tabControl1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);

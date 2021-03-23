@@ -12,11 +12,14 @@ namespace Hoi4_Launcher
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            //List<string> test = new List<string>();
+            //test.Add("-autosave=NEVER");
+            //test.Add("-debug");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new Form1(args));
         }
     }
 }
