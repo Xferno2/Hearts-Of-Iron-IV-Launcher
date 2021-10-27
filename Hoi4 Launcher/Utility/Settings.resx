@@ -117,4 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="label5.ToolTip" xml:space="preserve">
+    <value>By default the launcher doesn't generate
+descriptor.mod(the file that allows you to load mods)
+by enabeling this the launcher on startup will generate the files.
+WARNING! This feature is in testing, it doesn't even check if the
+descriptop.mod is valid so use with caution. Any feedback is
+appreciated, you can open an issue.
+</value>
+  </data>
 </root>

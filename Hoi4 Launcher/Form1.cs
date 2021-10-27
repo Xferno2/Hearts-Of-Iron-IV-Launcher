@@ -13,6 +13,7 @@ using System.Timers;
 using Timer = System.Timers.Timer;
 using Hoi4_Launcher.Utility;
 using System.Drawing.Imaging;
+using Hoi4_Launcher.Parser;
 
 namespace Hoi4_Launcher
 {
@@ -30,6 +31,7 @@ namespace Hoi4_Launcher
         private string args;
 
         Timer updateUI = new Timer(100);
+        modParser modParser;
 
         static launchSettings data = new launchSettings();
 
@@ -40,7 +42,10 @@ namespace Hoi4_Launcher
 
         public Form1(string[] args)
         {
-            foreach (var arg in args)
+            var defaultArgsLaunch = args.ToList();
+            var settingsArgsLaunch = Properties.Settings.Default.startArguments.Split(' ').ToList();
+            var launchArguments = defaultArgsLaunch.Union(settingsArgsLaunch).ToList();
+            foreach (var arg in launchArguments)
             {
                 this.args += arg + " ";
             }
@@ -48,6 +53,21 @@ namespace Hoi4_Launcher
             var steamLink = new SteamLink { Dock = DockStyle.Fill, TopLevel = false };
             panel2.Controls.Add(steamLink) ;
             steamLink.Show();
+            if (Properties.Settings.Default.generateDescriptor)
+            {
+                modParser = new modParser(AppContext.BaseDirectory);
+                if (modParser.isPathValid)
+                {
+                    foreach (var mod in modParser.mods)
+                    {
+                        var id = mod.Split('\\').Last();
+                        modParser.createDescriptorFile(mod, Hoi4_Mods, id);
+                    }
+                }
+                else {
+                    Logger("Application encontered an error: " + modParser.exception);
+                }
+            }
         }
 
         protected override CreateParams CreateParams
@@ -83,19 +103,19 @@ namespace Hoi4_Launcher
 
             //Release Candidate disable settings
             //Remove this when Finished
-            //Settings settingsForm = new Settings();
-            //settingsForm.TopLevel = false;
-            //settingsForm.AutoScroll = true;
-            //settingsForm.Dock = DockStyle.Fill;
-            //panel1.Controls.Add(settingsForm);
-            //settingsForm.Show();
+            Settings settingsForm = new Settings();
+            settingsForm.TopLevel = false;
+            settingsForm.AutoScroll = true;
+            settingsForm.Dock = DockStyle.Fill;
+            panel1.Controls.Add(settingsForm);
+            settingsForm.Show();
 
 
-            //panel1.AutoScroll = true;
+            panel1.AutoScroll = true;
 
 
             categoriesBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            Logger("Application arguments: " + (String.IsNullOrEmpty(args) ? "null" : args));
+            Logger("Application arguments: " + (String.IsNullOrWhiteSpace(args) ? "null" : args));
             this.DoubleBuffered = true;
             Util.enableDoubleBuff(tabControl1);
             Util.enableDoubleBuff(tabPage1);
@@ -144,7 +164,7 @@ namespace Hoi4_Launcher
         }
 
         public List<newModInfo> load_mods_info() {
-            string[] stringSeparators = new string[] { "\n\t" };
+            string[] stringSeparators = new string[] { "\n\t", "\n\r", Environment.NewLine };
             List<newModInfo> mods = new List<newModInfo>();
             DirectoryInfo d = new DirectoryInfo(Hoi4_Mods);
             FileInfo[] Files = d.GetFiles("*.mod");
@@ -276,6 +296,7 @@ namespace Hoi4_Launcher
             config.enabled_mods = enabled_mods;
             config.disabled_dlcs = disabled_dlc;
             SerializeConfig(config);
+            Properties.Settings.Default.Save();
             Process.Start(@"hoi4.exe", args);
             Application.Exit();
         }
@@ -542,6 +563,11 @@ namespace Hoi4_Launcher
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.Save();
         }
     }
 

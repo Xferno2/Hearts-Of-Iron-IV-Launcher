@@ -101,7 +101,6 @@
             this.userControl11.TabIndex = 4;
             this.userControl11.Text = "PLAY";
             this.userControl11.Click += new System.EventHandler(this.UserControl11_Click);
-            this.userControl11.Load += new System.EventHandler(this.userControl11_Load);
             // 
             // metroSetControlBox1
             // 
@@ -421,6 +420,7 @@
             this.Text = "HEARTS OF IRON IV LAUNCHER";
             this.TextColor = System.Drawing.Color.White;
             this.ThemeName = "MetroLight";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load_1);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();

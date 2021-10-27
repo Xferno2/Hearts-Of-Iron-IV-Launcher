@@ -28,6 +28,15 @@ namespace Hoi4_Launcher.Utility
         {
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             this.BackColor = Color.Transparent;
+            if (Properties.Settings.Default.generateDescriptor)
+            {
+                radioButton1.Checked = true;
+            }
+            else
+            {
+                radioButton2.Checked = true;
+            }
+            textBox1.Text = Properties.Settings.Default.startArguments;
         }
         protected override CreateParams CreateParams
         {
@@ -59,6 +68,27 @@ namespace Hoi4_Launcher.Utility
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButton1.Checked)
+            {
+                Properties.Settings.Default.generateDescriptor = true;
+            }
+            else
+            {
+                Properties.Settings.Default.generateDescriptor = false;
+            }
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.startArguments = textBox1.Text;
         }
     }
 }

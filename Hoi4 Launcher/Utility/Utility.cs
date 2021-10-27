@@ -103,6 +103,7 @@ namespace Hoi4_Launcher.Utility
             }
             catch (Exception ex) { return null; }
         }
+
         public static void enableDoubleBuff(System.Windows.Forms.Control cont)
         {
             System.Reflection.PropertyInfo DemoProp = typeof(System.Windows.Forms.Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
