@@ -68,16 +68,6 @@ namespace Hoi4_Launcher.Parser
                 {
                     try
                     {
-                        //using (ZipArchive archive = ZipFile.OpenRead(zipFile.FullName))
-                        //{
-                        //    ZipArchiveEntry descriptor = archive.GetEntry("descriptor.mod");
-                        //    descriptor.ExtractToFile(@"descriptor.mod");
-                        //    var textStream = descriptor.Open();
-                        //    StreamReader reader = new StreamReader(textStream);
-                        //    var descriptorFile = editDescriptor(reader.ReadToEnd(), zipFile.FullName);
-                        //    System.IO.File.WriteAllLines(savePath + "\\ugc_" + id + ".mod", descriptorFile);
-                        //}
-
                         using (Stream stream = File.OpenRead(zipFile.FullName))
                         using (var reader = ReaderFactory.Open(stream))
                         {

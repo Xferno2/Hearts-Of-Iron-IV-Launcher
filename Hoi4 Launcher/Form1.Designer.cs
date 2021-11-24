@@ -245,7 +245,6 @@
             this.userControl12.TabIndex = 6;
             this.userControl12.Text = "Clear";
             this.userControl12.Click += new System.EventHandler(this.button1_Click);
-            this.userControl12.Load += new System.EventHandler(this.userControl12_Load);
             // 
             // list_mods
             // 

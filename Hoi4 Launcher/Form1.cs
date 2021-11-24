@@ -264,7 +264,7 @@ namespace Hoi4_Launcher
                     var dlc = new dlcModel();
                     var x = File.ReadLines(dlcFullPath);
                     dlc.name = x.First().Split('"')[1].Replace('"', ' ');
-                    dlc.path = x.ElementAt(1).Split('"')[1].Replace('"', ' ').Split('.').First() + ".dlc";
+                    dlc.path = x.ElementAt(1).Split('=')[1].Replace('"', ' ').Replace(" ", "").Split('.').First() + ".dlc";
                     var party = x.ElementAt(x.Count() - 2).Split('=')[1].Replace(" ", "");
                     if (party == "yes")
                     { dlc._3rdparty = true; userControl11._3rdParty = true; }
@@ -506,7 +506,7 @@ namespace Hoi4_Launcher
             Logger("I'm clear button and I've been clicked");
             //categoriesBox.DroppedDown = false;
             textBox2.Text = "";
-            categoriesBox.SelectedIndex = 0;
+            categoriesBox.SelectedIndex = -1;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -551,11 +551,6 @@ namespace Hoi4_Launcher
         }
 
         private void list_mods_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-
-        private void userControl12_Load(object sender, EventArgs e)
         {
 
         }
