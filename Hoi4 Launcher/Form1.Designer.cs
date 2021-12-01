@@ -167,7 +167,6 @@
             this.tabPage1.Size = new System.Drawing.Size(542, 383);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "News";
-            this.tabPage1.Click += new System.EventHandler(this.tabPage1_Click);
             // 
             // tabPage2
             // 
@@ -286,7 +285,6 @@
             this.list_mods.Size = new System.Drawing.Size(542, 297);
             this.list_mods.TabIndex = 9;
             this.list_mods.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cellClick);
-            this.list_mods.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.list_mods_CellContentClick);
             // 
             // label1
             // 
@@ -344,7 +342,6 @@
             this.label_mods.Size = new System.Drawing.Size(49, 19);
             this.label_mods.TabIndex = 1;
             this.label_mods.Text = "Mods:";
-            this.label_mods.Click += new System.EventHandler(this.label_mods_Click);
             // 
             // tabPage4
             // 
@@ -367,7 +364,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(541, 377);
             this.panel1.TabIndex = 0;
-            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // tabPage5
             // 

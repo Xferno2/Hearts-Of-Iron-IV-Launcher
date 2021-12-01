@@ -14,6 +14,7 @@ using Timer = System.Timers.Timer;
 using Hoi4_Launcher.Utility;
 using System.Drawing.Imaging;
 using Hoi4_Launcher.Parser;
+using System.Reflection;
 
 namespace Hoi4_Launcher
 {
@@ -31,7 +32,7 @@ namespace Hoi4_Launcher
         private string args;
 
         Timer updateUI = new Timer(100);
-        modParser modParser;
+        descriptorGenerator descriptorGenerator;
 
         static launchSettings data = new launchSettings();
 
@@ -55,17 +56,17 @@ namespace Hoi4_Launcher
             steamLink.Show();
             if (Properties.Settings.Default.generateDescriptor)
             {
-                modParser = new modParser(AppContext.BaseDirectory);
-                if (modParser.isPathValid)
+                descriptorGenerator = new descriptorGenerator(AppContext.BaseDirectory);
+                if (descriptorGenerator.isPathValid)
                 {
-                    foreach (var mod in modParser.mods)
+                    foreach (var mod in descriptorGenerator.mods)
                     {
                         var id = mod.Split('\\').Last();
-                        modParser.createDescriptorFile(mod, Hoi4_Mods, id);
+                        descriptorGenerator.createDescriptorFile(mod, Hoi4_Mods, id);
                     }
                 }
                 else {
-                    Logger("Application encontered an error: " + modParser.exception);
+                    Logger("Application encontered an error: " + descriptorGenerator.exception);
                 }
             }
         }
@@ -119,7 +120,9 @@ namespace Hoi4_Launcher
             this.DoubleBuffered = true;
             Util.enableDoubleBuff(tabControl1);
             Util.enableDoubleBuff(tabPage1);
-            dis_dlc = GetDLCs();
+            dlcParser dlcParser = new dlcParser();
+            dis_dlc = dlcParser.GetDLCs();
+            userControl11._3rdParty = dlcParser.is3rdParty;
             load();
             updateUI.Elapsed += updateUI_DoWork;
             updateUI.Start();
@@ -129,7 +132,9 @@ namespace Hoi4_Launcher
         {
             //Load Mods
             var items = load_items();
-            globalMods = load_mods_info();
+            modParser parser = new modParser(Hoi4_Mods);
+            globalMods = parser.load_mods_info();
+            categoriesBox.Items.AddRange(parser.comboBoxCategories.ToArray());
             generateCategories();
             int enabled_mods = 0;
             foreach (var mod in globalMods)
@@ -163,86 +168,6 @@ namespace Hoi4_Launcher
             return obj;
         }
 
-        public List<newModInfo> load_mods_info() {
-            string[] stringSeparators = new string[] { "\n\t", "\n\r", Environment.NewLine };
-            List<newModInfo> mods = new List<newModInfo>();
-            DirectoryInfo d = new DirectoryInfo(Hoi4_Mods);
-            FileInfo[] Files = d.GetFiles("*.mod");
-            foreach (FileInfo file in Files)
-            {
-                var mod = new newModInfo();
-                mod.gameRegestryMod = "mod/" + file.Name;
-                //   if (mod.gameRegestryMod == "mod/ugc_1395409185.mod")
-                //   {
-                //        Debugger.Break();
-                //   }
-                var modFiles = File.ReadAllLines(file.FullName);
-                var modFileWhole = File.ReadAllText(file.FullName);
-                foreach (var modFile in modFiles) {
-                    if (modFile.Contains("name=")) {
-                        mod.displayName = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    if (modFile.Contains("archive="))
-                    {
-                        mod.dirPath = modFile.Split('=')[1].Replace("\"", "");
-                        mod.isPath = false;
-                    }
-                    if (modFile.Contains("path="))
-                    {
-                        mod.dirPath = modFile.Split('=')[1].Replace("\"", "");
-                        mod.isPath = true;
-                    }
-                    if (modFile.Contains("supported_version="))
-                    {
-                        mod.supported_version = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    if (modFile.Contains("remote_file_id="))
-                    {
-                        mod.remote_fileid = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    //if (modFile.Contains("picture="))
-                    //{
-                    //    if (mod.dirPath != null)
-                    //    {
-                    //        if (mod.isPath)
-                    //        {
-                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, modFile.Split('=')[1].Replace("\"", "")), 75, 75);
-                    //        }
-                    //        else if (!mod.isPath)
-                    //        {
-                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, modFile.Split('=')[1].Replace("\"", "")), 75, 75);
-                    //        }
-                    //    }
-                    //}
-                    if (modFile.Contains("tags={"))
-                    {
-                        List<string> tagsList = new List<string>();
-                        string[] titleSeparators = new string[] { "tags={" };
-                        string searchInText = "tags={" + modFileWhole.Split(titleSeparators, StringSplitOptions.None)[1];
-                        var tagsNotFormated = removeBrackets(searchInText, "tags={", "}", false);
-                        var tagsFormated = tagsNotFormated.Split(stringSeparators, StringSplitOptions.None);
-                        foreach (var tag in tagsFormated) {
-                            if (tag != "")
-                            { var currentTag = removeBrackets(tag, "\"", "\"");
-                                tagsList.Add(currentTag);
-                                bool isItemInList = false;
-                                foreach (var listItem in categoriesBox.Items) {
-                                    if (listItem.ToString().ToLower() == currentTag.ToLower()) {
-                                        isItemInList = true;
-                                    }
-                                }
-                                if (!isItemInList)
-                                    categoriesBox.Items.Add(currentTag);
-                            }
-                        }
-                        mod.tags = tagsList;
-                    }
-                }
-                mods.Add(mod);
-            }
-            return mods;
-        }
-
 
         public void SerializeConfig(object x)
         {
@@ -251,31 +176,6 @@ namespace Hoi4_Launcher
             settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
             File.WriteAllText(Hoi4_Enb_Mods, JsonConvert.SerializeObject(x, Formatting.Indented, settings));
-        }
-
-        public dlcModel[] GetDLCs() {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "dlc");
-            List<dlcModel> dlcs = new List<dlcModel>();
-            foreach (var dir in Directory.GetDirectories(path)) {
-                try
-                {
-                    DirectoryInfo dInfo = new DirectoryInfo(dir);
-                    var dlcFullPath = dInfo.GetFilesByExtensions(".dlc").First().FullName;
-                    var dlc = new dlcModel();
-                    var x = File.ReadLines(dlcFullPath);
-                    dlc.name = x.First().Split('"')[1].Replace('"', ' ');
-                    dlc.path = x.ElementAt(1).Split('=')[1].Replace('"', ' ').Replace(" ", "").Split('.').First() + ".dlc";
-                    var party = x.ElementAt(x.Count() - 2).Split('=')[1].Replace(" ", "");
-                    if (party == "yes")
-                    { dlc._3rdparty = true; userControl11._3rdParty = true; }
-                    else { dlc._3rdparty = false; }
-                    dlcs.Add(dlc);
-                }
-                catch (Exception ex)
-                {
-                }
-            }
-            return dlcs.ToArray();
         }
         List<string> enabled_mods = new List<string>();
         private void UserControl11_Click(object sender, EventArgs e)
@@ -299,23 +199,6 @@ namespace Hoi4_Launcher
             Properties.Settings.Default.Save();
             Process.Start(@"hoi4.exe", args);
             Application.Exit();
-        }
-
-        private string removeBrackets(string text, string from, string to, bool tolast = true) {
-            int pFrom = text.IndexOf(from) + from.Length;
-            int pTo = 0;
-            if (tolast)
-            {
-                pTo = text.LastIndexOf(to);
-            }
-            else {
-                pTo = text.IndexOf(to);
-            }
-            try {
-                return text.Substring(pFrom, pTo - pFrom);
-            } catch (Exception ex) {
-                return text;
-            }
         }
 
         private void updateUI_DoWork(object sender, ElapsedEventArgs e)
@@ -523,22 +406,6 @@ namespace Hoi4_Launcher
         {
             checkBox();
         }
-
-        private void userControl11_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label_mods_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void tabPage1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(categoriesBox.Text))
@@ -548,16 +415,6 @@ namespace Hoi4_Launcher
             else {
                 updateRowsFilter(textBox2.Text, generatedTables.First(x => x.Value.Equals(categoriesBox.Text)).Key);
             }
-        }
-
-        private void list_mods_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)

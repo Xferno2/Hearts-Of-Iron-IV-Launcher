@@ -1,123 +1,107 @@
-﻿using Hoi4_Launcher.Utility;
-using SharpCompress.Readers;
+﻿using Hoi4_Launcher.Model;
+using Hoi4_Launcher.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Hoi4_Launcher.Parser
 {
-    class modParser
+    public class modParser
     {
-        public string modsFolder;
-        public string[] mods;
-        public bool isPathValid = false;
-        public Exception exception;
-        public modParser(string thisPath)
-        {
-            this.modsFolder = workshop(thisPath);
-            try
-            {
-                mods = Directory.GetDirectories(modsFolder);
-                this.isPathValid = true;
-            }
-            catch (Exception ex) {
-            string message = "I couldn't find the path to the mods directory." + 
-                    Environment.NewLine+
-                    "Perhaps this is not a steam install?" +
-                    Environment.NewLine + 
-                    "Either way descriptor.mod is disabled. If you think this is an issue, open one on github."+
-                    Environment.NewLine +
-                    "More info in Log tab!";
-            string title = "Something intresting happened";
-            MessageBox.Show(message, title);
-                Properties.Settings.Default.generateDescriptor = false;
-                Properties.Settings.Default.Save();
-                this.exception = ex;
-            }
+        private string path;
+        public List<string> comboBoxCategories = new List<string>();
+        public modParser(string Path) {
+            this.path = Path;
         }
-        public string workshop(string path) => path.Split(new string[] { "steamapps" }, StringSplitOptions.None)[0] + "steamapps\\workshop\\content\\394360";
 
-        public bool createDescriptorFile(string path, string savePath, string id)
+        public List<newModInfo> load_mods_info()
         {
-            DirectoryInfo dInfo = new DirectoryInfo(path);
-            FileInfo zipFile;
-            try
+            string[] stringSeparators = new string[] { "\n\t", "\n\r", Environment.NewLine };
+            List<newModInfo> mods = new List<newModInfo>();
+            DirectoryInfo d = new DirectoryInfo(path);
+            FileInfo[] Files = d.GetFiles("*.mod");
+            foreach (FileInfo file in Files)
             {
-                zipFile = dInfo.GetFilesByExtensions(new string[] { ".rar", ".zip", ".7z" }).First();
-            }
-            catch (Exception ex) {
-                zipFile = null;
-            }
-            // We are going to check if descriptor.mod exists
-            if (File.Exists(dInfo.FullName + "\\descriptor.mod"))
-            {
-                if (!File.Exists(savePath + "\\ugc_" + id + ".mod")){
-                    var descriptorFile = editDescriptor(File.ReadAllText(dInfo.FullName + "\\descriptor.mod"), dInfo.FullName);
-                    System.IO.File.WriteAllLines(savePath + "\\ugc_" + id + ".mod", descriptorFile);
-                }
-                return true;
-            }
-            else if (zipFile != null)
-            {
-                if (!File.Exists(savePath + "\\ugc_" + id + ".mod"))
+                var mod = new newModInfo();
+                mod.gameRegestryMod = "mod/" + file.Name;
+                //   if (mod.gameRegestryMod == "mod/ugc_1395409185.mod")
+                //   {
+                //        Debugger.Break();
+                //   }
+                var modFiles = File.ReadAllLines(file.FullName);
+                var modFileWhole = File.ReadAllText(file.FullName);
+                foreach (var modFile in modFiles)
                 {
-                    try
+                    if (modFile.Contains("name="))
                     {
-                        using (Stream stream = File.OpenRead(zipFile.FullName))
-                        using (var reader = ReaderFactory.Open(stream))
+                        mod.displayName = modFile.Split('=')[1].Replace("\"", "");
+                    }
+                    if (modFile.Contains("archive="))
+                    {
+                        mod.dirPath = modFile.Split('=')[1].Replace("\"", "");
+                        mod.isPath = false;
+                    }
+                    if (modFile.Contains("path="))
+                    {
+                        mod.dirPath = modFile.Split('=')[1].Replace("\"", "");
+                        mod.isPath = true;
+                    }
+                    if (modFile.Contains("supported_version="))
+                    {
+                        mod.supported_version = modFile.Split('=')[1].Replace("\"", "");
+                    }
+                    if (modFile.Contains("remote_file_id="))
+                    {
+                        mod.remote_fileid = modFile.Split('=')[1].Replace("\"", "");
+                    }
+                    //if (modFile.Contains("picture="))
+                    //{
+                    //    if (mod.dirPath != null)
+                    //    {
+                    //        if (mod.isPath)
+                    //        {
+                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, modFile.Split('=')[1].Replace("\"", "")), 75, 75);
+                    //        }
+                    //        else if (!mod.isPath)
+                    //        {
+                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, modFile.Split('=')[1].Replace("\"", "")), 75, 75);
+                    //        }
+                    //    }
+                    //}
+                    if (modFile.Contains("tags={"))
+                    {
+                        List<string> tagsList = new List<string>();
+                        string[] titleSeparators = new string[] { "tags={" };
+                        string searchInText = "tags={" + modFileWhole.Split(titleSeparators, StringSplitOptions.None)[1];
+                        var tagsNotFormated = Util.removeBrackets(searchInText, "tags={", "}", false);
+                        var tagsFormated = tagsNotFormated.Split(stringSeparators, StringSplitOptions.None);
+                        foreach (var tag in tagsFormated)
                         {
-                            while (reader.MoveToNextEntry())
+                            if (tag != "")
                             {
-                                if (!reader.Entry.IsDirectory && reader.Entry.Key == "descriptor.mod")
+                                var currentTag = Util.removeBrackets(tag, "\"", "\"");
+                                tagsList.Add(currentTag);
+                                bool isItemInList = false;
+                                foreach (var listItem in comboBoxCategories)
                                 {
-                                    reader.WriteEntryToFile(@"tempDescriptor.mod");
-                                    var descriptorFile = editDescriptor(File.ReadAllText(@"tempDescriptor.mod"), zipFile.FullName);
-                                    System.IO.File.WriteAllLines(savePath + "\\ugc_" + id + ".mod", descriptorFile);
-                                    break;
+                                    if (listItem.ToString().ToLower() == currentTag.ToLower())
+                                    {
+                                        isItemInList = true;
+                                    }
                                 }
+                                if (!isItemInList)
+                                    comboBoxCategories.Add(currentTag);
                             }
                         }
+                        mod.tags = tagsList;
                     }
-                    catch (Exception ex) { }
                 }
-                if (File.Exists(@"tempDescriptor.mod"))
-                {
-                    File.Delete(@"tempDescriptor.mod");
-                }
-                return true;
+                mods.Add(mod);
             }
-            else
-            {
-                return false;
-            }
-        }
-
-        // this rlly needs a rewrite
-        private string[] editDescriptor(string descriptor, string path)
-        {
-            bool doesItContainPath = false;
-            List<string> descriptorFile = new List<string>();
-            foreach (var line in descriptor.Split(new string[] { Environment.NewLine, "\n\t", "\n\r", "\n"}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                var currentLine = line;
-                if (line.Split('=').First().ToLower() == "path")
-                {
-                    currentLine = "path=" + path;
-                    doesItContainPath = true;
-
-                }
-                descriptorFile.Add(currentLine);
-            }
-            if (!doesItContainPath)
-            {
-                descriptorFile.Add("path=" + path);
-            }
-            return descriptorFile.ToArray();
+            return mods;
         }
     }
 }

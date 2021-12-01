@@ -109,5 +109,27 @@ namespace Hoi4_Launcher.Utility
             System.Reflection.PropertyInfo DemoProp = typeof(System.Windows.Forms.Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             DemoProp.SetValue(cont, true, null);
         }
+
+        public static string removeBrackets(string text, string from, string to, bool tolast = true)
+        {
+            int pFrom = text.IndexOf(from) + from.Length;
+            int pTo = 0;
+            if (tolast)
+            {
+                pTo = text.LastIndexOf(to);
+            }
+            else
+            {
+                pTo = text.IndexOf(to);
+            }
+            try
+            {
+                return text.Substring(pFrom, pTo - pFrom);
+            }
+            catch (Exception ex)
+            {
+                return text;
+            }
+        }
     }
 }

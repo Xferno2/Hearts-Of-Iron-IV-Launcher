@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hoi4 Launcher", "Hoi4 Launc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImgButton", "ImgButton\ImgButton.csproj", "{E17D7328-DAB5-4044-9D55-F4C77A0BF4D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hoi4Lanucher_Updater", "Hoi4Lanucher_Updater\Hoi4Lanucher_Updater.csproj", "{49592BCC-46A3-49C2-A9ED-6A7D1E23E37E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{E17D7328-DAB5-4044-9D55-F4C77A0BF4D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E17D7328-DAB5-4044-9D55-F4C77A0BF4D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E17D7328-DAB5-4044-9D55-F4C77A0BF4D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49592BCC-46A3-49C2-A9ED-6A7D1E23E37E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49592BCC-46A3-49C2-A9ED-6A7D1E23E37E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49592BCC-46A3-49C2-A9ED-6A7D1E23E37E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49592BCC-46A3-49C2-A9ED-6A7D1E23E37E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
