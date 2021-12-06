@@ -30,6 +30,8 @@ namespace Hoi4_Launcher.Parser
                     dlc.name = x.First().Split('"')[1].Replace('"', ' ');
                     dlc.path = x.ElementAt(1).Split('=')[1].Replace('"', ' ').Replace(" ", "").Split('.').First() + ".dlc";
                     var party = x.ElementAt(x.Count() - 2).Split('=')[1].Replace(" ", "");
+                    if (party.Contains("music"))
+                        party = x.ElementAt(x.Count() - 3).Split('=')[1].Replace(" ", "");
                     if (party == "yes")
                     { dlc._3rdparty = true; is3rdParty = true; }
                     else { dlc._3rdparty = false; }
