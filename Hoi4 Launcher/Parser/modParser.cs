@@ -11,13 +11,11 @@ namespace Hoi4_Launcher.Parser
 {
     public class modParser
     {
-        private string path;
-        public List<string> comboBoxCategories = new List<string>();
-        public modParser(string Path) {
-            this.path = Path;
+        public static List<string> comboBoxCategories = new List<string>();
+        public modParser() {
         }
 
-        public List<newModInfo> load_mods_info()
+        public static List<newModInfo> load_mods_info(string path)
         {
             string[] stringSeparators = new string[] { "\n\t", "\n\r", Environment.NewLine };
             List<newModInfo> mods = new List<newModInfo>();
@@ -35,6 +33,7 @@ namespace Hoi4_Launcher.Parser
                 var modFileWhole = File.ReadAllText(file.FullName);
                 foreach (var modFile in modFiles)
                 {
+
                     if (modFile.Contains("name="))
                     {
                         mod.displayName = modFile.Split('=')[1].Replace("\"", "");

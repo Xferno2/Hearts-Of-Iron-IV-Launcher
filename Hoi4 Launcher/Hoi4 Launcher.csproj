@@ -241,6 +241,7 @@
     <Content Include="Resources\background.png" />
     <Content Include="Resources\button.png" />
     <Content Include="Resources\button_Mod.png" />
+    <None Include="Resources\unsuported_version.png" />
     <None Include="Resources\steam disabled.png" />
     <None Include="Resources\degrade.png" />
     <None Include="Resources\degrade2.png" />

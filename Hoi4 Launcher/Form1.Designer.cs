@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
@@ -53,6 +54,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.textBox1 = new System.Windows.Forms.RichTextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -285,6 +287,7 @@
             this.list_mods.Size = new System.Drawing.Size(542, 297);
             this.list_mods.TabIndex = 9;
             this.list_mods.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cellClick);
+            this.list_mods.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.list_mods_CellFormatting);
             // 
             // label1
             // 
@@ -389,6 +392,11 @@
             this.textBox1.TabIndex = 1;
             this.textBox1.Text = "";
             // 
+            // toolTip1
+            // 
+            this.toolTip1.IsBalloon = true;
+            this.toolTip1.ShowAlways = true;
+            // 
             // Form1
             // 
             this.AllowResize = false;
@@ -454,6 +462,7 @@
         private MetroSet_UI.Controls.MetroSetControlBox metroSetControlBox1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
+        public System.Windows.Forms.ToolTip toolTip1;
     }
 }
 

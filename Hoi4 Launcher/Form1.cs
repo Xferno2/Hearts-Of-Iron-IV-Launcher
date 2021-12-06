@@ -88,18 +88,29 @@ namespace Hoi4_Launcher
             modsTable.Columns.Add("IMG", typeof(Image));
             modsTable.Columns.Add("ENABLE", typeof(bool));
             modsTable.Columns.Add("NAME", typeof(string));
-            modsTable.Columns.Add("MESSAGE", typeof(bool));
+            modsTable.Columns.Add("VER", typeof(Image));
+            modsTable.Columns.Add("ID", typeof(string));
+            modsTable.Columns.Add("MSG", typeof(string));
             list_mods.DataSource = modsTable;
             list_mods.Columns[0].Width = 75;
-            list_mods.Columns[1].Width = 20;
+            list_mods.Columns[1].Width = 25;
+            list_mods.Columns[3].Width = 30;
             list_mods.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             list_mods.Sort(list_mods.Columns["NAME"], ListSortDirection.Ascending);
             list_mods.RowTemplate.Height = 75;
-            list_mods.Columns["MESSAGE"].Visible = false;
+            list_mods.Columns["IMG"].Visible = false;
+            list_mods.Columns["ID"].Visible = false;
+            list_mods.Columns["MSG"].Visible = false;
+            list_mods.DefaultCellStyle.NullValue = null;
+            list_mods.ReadOnly = true;
+
             imEmpty.Columns.Add("ph1", typeof(Nullable));
             imEmpty.Columns.Add("ph2", typeof(Nullable));
             imEmpty.Columns.Add("NAME", typeof(string));
-            imEmpty.Rows.Add(null, null, "Nothing here huh");
+            imEmpty.Columns.Add("IMG", typeof(Nullable));
+            imEmpty.Columns.Add("ID", typeof(Nullable));
+            imEmpty.Columns.Add("MSG", typeof(Nullable));
+            imEmpty.Rows.Add(null, null, "Nothing here huh", null, null, null);
 
 
             //Release Candidate disable settings
@@ -130,18 +141,28 @@ namespace Hoi4_Launcher
 
         private void load()
         {
+            //Load LHSetthings
+            string data = File.ReadAllText(@"launcher-settings.json");
+            gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
+
             //Load Mods
             var items = load_items();
-            modParser parser = new modParser(Hoi4_Mods);
-            globalMods = parser.load_mods_info();
-            categoriesBox.Items.AddRange(parser.comboBoxCategories.ToArray());
+            globalMods = modParser.load_mods_info(Hoi4_Mods);
+            categoriesBox.Items.AddRange(modParser.comboBoxCategories.ToArray());
             generateCategories();
             int enabled_mods = 0;
             foreach (var mod in globalMods)
             {
+                Image version = new Bitmap(1,1);
                 bool enabled = false;
+                string msg="";
+                if (!mod.isSupported_Version(gameSettings.rawVersion)){
+                    version = Properties.Resources.unsuported_version;
+                    msg = ("This mod does not support the current version (" + gameSettings.rawVersion + ") of the game." + System.Environment.NewLine
+                        +  "The mod supports version " + mod.supported_version);
+                }
                 if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
-                modsTable.Rows.Add(mod.picture, enabled, mod.displayName, false);
+                modsTable.Rows.Add(mod.picture, enabled, mod.displayName, version, mod.remote_fileid, msg);
 
             }
             updateModsCount(enabled_mods, globalMods.Count);
@@ -153,9 +174,6 @@ namespace Hoi4_Launcher
                 if (items.disabled_dlcs.Contains(dlc.path)) { enabled = false; }
                 list_dlc.Items.Add(dlc.name, enabled);
             }
-            //Load LHSetthings
-            string data = File.ReadAllText(@"launcher-settings.json");
-            gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
             label_version.Text += " " + gameSettings.version;
         }
 
@@ -266,20 +284,36 @@ namespace Hoi4_Launcher
                 currentCategory.Columns.Add("IMG", typeof(Image));
                 currentCategory.Columns.Add("ENABLE", typeof(bool));
                 currentCategory.Columns.Add("NAME", typeof(string));
-                currentCategory.Columns.Add("MESSAGE", typeof(bool));
+                currentCategory.Columns.Add("VER", typeof(Image));
+                currentCategory.Columns.Add("ID", typeof(string));
+                currentCategory.Columns.Add("MSG", typeof(string));
                 foreach (var mod in globalMods)
                 {
-                    foreach (var tag in mod.tags)
+                    Image version = new Bitmap(1,1);
+                    bool isSupported = true;
+                    string msg = "";
+                    if (!mod.isSupported_Version(gameSettings.rawVersion))
                     {
-                        if (tag.ToLower() == category.ToString().ToLower())
+                        version = Properties.Resources.unsuported_version;
+                        msg = ("This mod does not support the current version (" + gameSettings.rawVersion + ") of the game." + System.Environment.NewLine
+    + "The mod supports version " + mod.supported_version);
+                        isSupported = false;
+                    }
+                    if (mod.tags != null && mod.tags?.Count > 0)
+                    {
+                        foreach (var tag in mod.tags)
                         {
-                            if (enabled_mods.Contains(mod.gameRegestryMod))
+                            if (tag.ToLower() == category.ToString().ToLower())
                             {
-                                currentCategory.Rows.Add(mod.picture, true, mod.displayName, false);
-                            }
-                            else
-                            {
-                                currentCategory.Rows.Add(mod.picture, false, mod.displayName, false);
+                                if (enabled_mods.Contains(mod.gameRegestryMod))
+                                {
+                                    currentCategory.Rows.Add(mod.picture, true, mod.displayName, version, mod.remote_fileid, msg);
+                                }
+                                else
+                                {
+                                    currentCategory.Rows.Add(mod.picture, false, mod.displayName, version, mod.remote_fileid, msg);
+
+                                }
                             }
                         }
                     }
@@ -304,8 +338,14 @@ namespace Hoi4_Launcher
                 }
                 else
                 {
+                    list_mods.Columns["IMG"].Visible = false;
+                    list_mods.Columns["ID"].Visible = false;
+                    list_mods.Columns["MSG"].Visible = false;
+                    list_mods.Columns[0].Width = 75;
+                    list_mods.Columns[1].Width = 25;
+                    list_mods.Columns[3].Width = 30;
+                    list_mods.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                     list_mods.DataSource = table;
-                    list_mods.Columns["MESSAGE"].Visible = false;
                     lastTable = (list_mods.DataSource as DataTable);
                     (list_mods.DataSource as DataTable).DefaultView.RowFilter = string.Format("NAME LIKE '{0}%'", text);
                 }
@@ -357,7 +397,7 @@ namespace Hoi4_Launcher
                 foreach (DataGridViewRow row in list_mods.Rows)
                 {if (list_mods.DataSource != imEmpty)
                     {
-                        if (Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[2].Value) == mod.displayName)
+                        if (Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
                         {
                             if (mod.displayName != null && !enabled_mods.Contains(mod.gameRegestryMod))
                             {
@@ -366,7 +406,7 @@ namespace Hoi4_Launcher
                             }
 
                         }
-                        else if (!Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[2].Value) == mod.displayName)
+                        else if (!Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
                         {
                             if (mod.displayName != null && enabled_mods.Contains(mod.gameRegestryMod))
                             {
@@ -386,8 +426,6 @@ namespace Hoi4_Launcher
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Logger("I'm clear button and I've been clicked");
-            //categoriesBox.DroppedDown = false;
             textBox2.Text = "";
             categoriesBox.SelectedIndex = -1;
         }
@@ -420,6 +458,18 @@ namespace Hoi4_Launcher
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Properties.Settings.Default.Save();
+        }
+
+        private void list_mods_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if ((e.ColumnIndex == this.list_mods.Columns["VER"].Index)
+&& e.Value != null) {
+                DataGridViewCell cell =
+this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                if (!e.Value.Equals(null)) {
+                    cell.ToolTipText = (string)this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex+2].Value;
+                }
+            }
         }
     }
 
