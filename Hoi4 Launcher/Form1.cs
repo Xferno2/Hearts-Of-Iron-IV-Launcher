@@ -462,10 +462,10 @@ namespace Hoi4_Launcher
 
         private void list_mods_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if ((e.ColumnIndex == this.list_mods.Columns["VER"].Index)
-&& e.Value != null) {
+            if(list_mods.DataSource != imEmpty)
+            if ((e.ColumnIndex == this.list_mods.Columns["VER"].Index) && e.Value != null) {
                 DataGridViewCell cell =
-this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 if (!e.Value.Equals(null)) {
                     cell.ToolTipText = (string)this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex+2].Value;
                 }
