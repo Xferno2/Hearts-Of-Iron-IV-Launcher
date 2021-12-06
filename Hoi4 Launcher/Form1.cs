@@ -1,8 +1,5 @@
 ﻿using Hoi4_Launcher.Model;
-using Hoi4_Launcher.Utility;
-using Hoi4_Launcher.Parser;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,38 +8,173 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Net.Http;
 using System.Timers;
 using Timer = System.Timers.Timer;
+using Hoi4_Launcher.Utility;
+using System.Drawing.Imaging;
+using Hoi4_Launcher.Parser;
+using System.Reflection;
 
 namespace Hoi4_Launcher
 {
-    public partial class Form1 : Form
+    public partial class Form1 : MetroSet_UI.Forms.MetroSetForm
     {
         private static string ParadoxFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive");
         private static string Hoi4_Doc = Path.Combine(ParadoxFolder, "Hearts of Iron IV");
         private static string Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
         private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mod");
         private static dlcModel[] dis_dlc = null;
-        private static int modsCount;
+
+        private static List<newModInfo> globalMods;
 
         private static LHSettings gameSettings = new LHSettings();
         private string args;
 
         Timer updateUI = new Timer(100);
+        descriptorGenerator descriptorGenerator;
 
         static launchSettings data = new launchSettings();
+
+        internal DataTable modsTable = new DataTable();
+        internal DataTable imEmpty = new DataTable();
+
+        public Util utilityClass = new Util();
+
         public Form1(string[] args)
         {
-            foreach (var arg in args)
+            var defaultArgsLaunch = args.ToList();
+            var settingsArgsLaunch = Properties.Settings.Default.startArguments.Split(' ').ToList();
+            var launchArguments = defaultArgsLaunch.Union(settingsArgsLaunch).ToList();
+            foreach (var arg in launchArguments)
             {
-                this.args += arg + " "; 
+                this.args += arg + " ";
             }
             InitializeComponent();
+            var steamLink = new SteamLink { Dock = DockStyle.Fill, TopLevel = false };
+            panel2.Controls.Add(steamLink) ;
+            steamLink.Show();
+            if (Properties.Settings.Default.generateDescriptor)
+            {
+                descriptorGenerator = new descriptorGenerator(AppContext.BaseDirectory);
+                if (descriptorGenerator.isPathValid)
+                {
+                    foreach (var mod in descriptorGenerator.mods)
+                    {
+                        var id = mod.Split('\\').Last();
+                        descriptorGenerator.createDescriptorFile(mod, Hoi4_Mods, id);
+                    }
+                }
+                else {
+                    Logger("Application encontered an error: " + descriptorGenerator.exception);
+                }
+            }
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // Turn on WS_EX_COMPOSITED
+             //   cp.Style &= ~~0x02000000; // Turn off WS_CLIPCHILDREN
+                return cp;
+            }
+        }
+
+
+        private void Form1_Load_1(object sender, EventArgs e)
+        {
+            modsTable.Columns.Add("IMG", typeof(Image));
+            modsTable.Columns.Add("ENABLE", typeof(bool));
+            modsTable.Columns.Add("NAME", typeof(string));
+            modsTable.Columns.Add("VER", typeof(Image));
+            modsTable.Columns.Add("ID", typeof(string));
+            modsTable.Columns.Add("MSG", typeof(string));
+            list_mods.DataSource = modsTable;
+            list_mods.Columns[0].Width = 75;
+            list_mods.Columns[1].Width = 25;
+            list_mods.Columns[3].Width = 30;
+            list_mods.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            list_mods.Sort(list_mods.Columns["NAME"], ListSortDirection.Ascending);
+            list_mods.RowTemplate.Height = 75;
+            list_mods.Columns["IMG"].Visible = false;
+            list_mods.Columns["ID"].Visible = false;
+            list_mods.Columns["MSG"].Visible = false;
+            list_mods.DefaultCellStyle.NullValue = null;
+            list_mods.ReadOnly = true;
+
+            imEmpty.Columns.Add("ph1", typeof(Nullable));
+            imEmpty.Columns.Add("ph2", typeof(Nullable));
+            imEmpty.Columns.Add("NAME", typeof(string));
+            imEmpty.Columns.Add("IMG", typeof(Nullable));
+            imEmpty.Columns.Add("ID", typeof(Nullable));
+            imEmpty.Columns.Add("MSG", typeof(Nullable));
+            imEmpty.Rows.Add(null, null, "Nothing here huh", null, null, null);
+
+
+            //Release Candidate disable settings
+            //Remove this when Finished
+            Settings settingsForm = new Settings();
+            settingsForm.TopLevel = false;
+            settingsForm.AutoScroll = true;
+            settingsForm.Dock = DockStyle.Fill;
+            panel1.Controls.Add(settingsForm);
+            settingsForm.Show();
+
+
+            panel1.AutoScroll = true;
+
+
+            categoriesBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            Logger("Application arguments: " + (String.IsNullOrWhiteSpace(args) ? "null" : args));
+            this.DoubleBuffered = true;
+            Util.enableDoubleBuff(tabControl1);
+            Util.enableDoubleBuff(tabPage1);
+            dlcParser dlcParser = new dlcParser();
+            dis_dlc = dlcParser.GetDLCs();
+            userControl11._3rdParty = dlcParser.is3rdParty;
+            load();
+            updateUI.Elapsed += updateUI_DoWork;
+            updateUI.Start();
+        }
+
+        private void load()
+        {
+            //Load LHSetthings
+            string data = File.ReadAllText(@"launcher-settings.json");
+            gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
+
+            //Load Mods
+            var items = load_items();
+            globalMods = modParser.load_mods_info(Hoi4_Mods);
+            categoriesBox.Items.AddRange(modParser.comboBoxCategories.ToArray());
+            generateCategories();
+            int enabled_mods = 0;
+            foreach (var mod in globalMods)
+            {
+                Image version = new Bitmap(1,1);
+                bool enabled = false;
+                string msg="";
+                if (!mod.isSupported_Version(gameSettings.rawVersion)){
+                    version = Properties.Resources.unsuported_version;
+                    msg = ("This mod does not support the current version (" + gameSettings.rawVersion + ") of the game." + System.Environment.NewLine
+                        +  "The mod supports version " + mod.supported_version);
+                }
+                if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
+                modsTable.Rows.Add(mod.picture, enabled, mod.displayName, version, mod.remote_fileid, msg);
+
+            }
+            updateModsCount(enabled_mods, globalMods.Count);
+
+            //Load DLC
+            foreach (var dlc in dis_dlc)
+            {
+                bool enabled = true;
+                if (items.disabled_dlcs.Contains(dlc.path)) { enabled = false; }
+                list_dlc.Items.Add(dlc.name, enabled);
+            }
+            label_version.Text += " " + gameSettings.version;
         }
 
         public launchSettings load_items()
@@ -54,85 +186,6 @@ namespace Hoi4_Launcher
             return obj;
         }
 
-        public List<newModInfo> load_mods_info() {
-            string[] stringSeparators = new string[] { "\n\t" };
-            List<newModInfo> mods = new List<newModInfo>();
-            DirectoryInfo d = new DirectoryInfo(Hoi4_Mods);
-            FileInfo[] Files = d.GetFiles("*.mod");
-            foreach (FileInfo file in Files)
-            {
-                var mod = new newModInfo();
-                mod.gameRegestryMod = "mod/" + file.Name;
-                //if (mod.gameRegestryMod == "mod/ugc_1368243403.mod")
-                //{
-                //    Debugger.Break();
-                //}
-                var modFiles = File.ReadAllLines(file.FullName);
-                var modFileWhole = File.ReadAllText(file.FullName);
-                foreach (var modFile in modFiles) {
-                    if (modFile.Contains("name=")) {
-                        mod.displayName = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    if (modFile.Contains("supported_version="))
-                    {
-                        mod.supported_version = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    if (modFile.Contains("remote_file_id="))
-                    {
-                        mod.remote_fileid = modFile.Split('=')[1].Replace("\"", "");
-                    }
-                    if (modFile.Contains("tags={"))
-                    {
-                        List<string> tagsList = new List<string>();
-                        var tagsNotFormated = removeBrackets(modFileWhole, "tags={", "}",false);
-                        var tagsFormated = tagsNotFormated.Split(stringSeparators, StringSplitOptions.None);
-                        foreach (var tag in tagsFormated) {
-                            if (tag != "")
-                            { var currentTag = removeBrackets(tag, "\"", "\"");
-                                tagsList.Add(currentTag);
-                                bool isItemInList = false;
-                                foreach (var listItem in categoriesBox.Items) {
-                                    if (listItem.ToString().ToLower() == currentTag.ToLower()) {
-                                        isItemInList = true;
-                                    }
-                                }
-                                if(!isItemInList)
-                                    categoriesBox.Items.Add(currentTag);
-                            }
-                        }
-                        mod.tags = tagsList;
-                    }
-                }
-                mods.Add(mod);
-            }
-            return mods;
-        }
-
-        private void load() {
-            //Load Mods
-            var items = load_items();
-            var mods = load_mods_info();
-            int enabled_mods = 0;
-            foreach (var mod in mods)
-            {
-                bool enabled = false;
-                if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
-                list_mods.Items.Add(mod.displayName, enabled);
-            }
-            modsCount = mods.Count;
-            updateModsCount(enabled_mods, modsCount);
-
-            //Load DLC
-            foreach (var dlc in dis_dlc) {
-                bool enabled = true;
-                if (items.disabled_dlcs.Contains(dlc.path)) { enabled = false; }
-                list_dlc.Items.Add(dlc.name,enabled);
-            }
-            //Load LHSetthings
-            string data = File.ReadAllText(@"launcher-settings.json");
-            gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
-            label_version.Text += " " + gameSettings.version;
-        }
 
         public void SerializeConfig(object x)
         {
@@ -142,44 +195,10 @@ namespace Hoi4_Launcher
 
             File.WriteAllText(Hoi4_Enb_Mods, JsonConvert.SerializeObject(x, Formatting.Indented, settings));
         }
-
-        public dlcModel[] GetDLCs() {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "dlc");
-            List<dlcModel> dlcs = new List<dlcModel>();
-                foreach (var dir in Directory.GetDirectories(path)) {
-                try
-                {
-                    DirectoryInfo dInfo = new DirectoryInfo(dir);
-                    var dlcFullPath = dInfo.GetFilesByExtensions(".dlc").First().FullName;
-                    var dlc = new dlcModel();
-                    var x = File.ReadLines(dlcFullPath);
-                    dlc.name = x.First().Split('"')[1].Replace('"', ' ');
-                    dlc.path = x.ElementAt(1).Split('"')[1].Replace('"', ' ').Split('.').First() + ".dlc";
-                    var party = x.ElementAt(x.Count() - 2).Split('=')[1].Replace(" ", "");
-                    if ( party == "yes")
-                    { dlc._3rdparty = true; userControl11._3rdParty = true; }
-                    else { dlc._3rdparty = false; }
-                    dlcs.Add(dlc);
-                }
-            catch (Exception ex)
-            {
-            }
-        }
-            return dlcs.ToArray();
-        }
-
+        List<string> enabled_mods = new List<string>();
         private void UserControl11_Click(object sender, EventArgs e)
         {
-            var mods = load_mods_info();
-            var enabled_mods = new List<string>();
-            foreach (var mod in mods)
-            {
-                if (list_mods.CheckedItems.Contains(mod.displayName))
-                {
-                    if (mod.displayName != null)
-                        enabled_mods.Add(mod.gameRegestryMod);
-                }
-            }
+            checkForMods();
             var disabled_dlc = new List<string>();
             foreach (var dlc in list_dlc.Items)
             {
@@ -195,37 +214,9 @@ namespace Hoi4_Launcher
             config.enabled_mods = enabled_mods;
             config.disabled_dlcs = disabled_dlc;
             SerializeConfig(config);
+            Properties.Settings.Default.Save();
             Process.Start(@"hoi4.exe", args);
             Application.Exit();
-        }
-
-        private string removeBrackets(string text, string from, string to , bool tolast =true) {
-            int pFrom = text.IndexOf(from) + from.Length;
-            int pTo = 0;
-            if (tolast)
-            {
-                pTo = text.LastIndexOf(to);
-            }
-            else {
-                pTo = text.IndexOf(to);
-            }
-            try {
-                return text.Substring(pFrom, pTo - pFrom);
-            } catch (Exception ex) {
-                return "";
-            }
-        }
-
-        private void Form1_Load_1(object sender, EventArgs e)
-        {
-            Logger("Application arguments: " +( String.IsNullOrEmpty(args) ? "null" : args));
-            this.DoubleBuffered = true;
-            Utility.Utility.enableDoubleBuff(tabControl1);
-            Utility.Utility.enableDoubleBuff(tabPage1);
-            dis_dlc = GetDLCs();
-            load();
-            updateUI.Elapsed += updateUI_DoWork;
-            updateUI.Start();
         }
 
         private void updateUI_DoWork(object sender, ElapsedEventArgs e)
@@ -241,15 +232,32 @@ namespace Hoi4_Launcher
             label_mods.Text = "Mods: " + count + "/" + maxCount;
         }
 
-     private void updateUIinvokable()
+        private void updateUIinvokable()
         {
             if (tabControl1.SelectedTab == tabPage3)
             {
-                updateModsCount(list_mods.CheckedItems.Count, modsCount);
+                //   if (list_mods.DataSource != modsTable)
+                //   { list_mods.DataSource = modsTable; }
+                updateModsCount(enabled_mods.Count, globalMods.Count);
+                updateCategories();
             }
             else if (tabControl1.SelectedTab == tabPage2)
             {
                 checkFor3rdParty();
+            }
+        }
+
+        public void checkBox() {
+            if (list_mods.DataSource != imEmpty)
+            {
+                if ((bool)list_mods.SelectedRows[0].Cells["ENABLE"].Value == false)
+                {
+                    list_mods.SelectedRows[0].Cells["ENABLE"].Value = true;
+                }
+                else
+                {
+                    list_mods.SelectedRows[0].Cells["ENABLE"].Value = false;
+                }
             }
         }
         private void checkFor3rdParty()
@@ -267,12 +275,206 @@ namespace Hoi4_Launcher
             }
             userControl11._3rdParty = is3rdParty;
         }
+        Dictionary<DataTable, string> generatedTables = new Dictionary<DataTable, string>();
+        private void generateCategories()
+        {
+            foreach (var category in categoriesBox.Items)
+            {
+                DataTable currentCategory = new DataTable();
+                currentCategory.Columns.Add("IMG", typeof(Image));
+                currentCategory.Columns.Add("ENABLE", typeof(bool));
+                currentCategory.Columns.Add("NAME", typeof(string));
+                currentCategory.Columns.Add("VER", typeof(Image));
+                currentCategory.Columns.Add("ID", typeof(string));
+                currentCategory.Columns.Add("MSG", typeof(string));
+                foreach (var mod in globalMods)
+                {
+                    Image version = new Bitmap(1,1);
+                    bool isSupported = true;
+                    string msg = "";
+                    if (!mod.isSupported_Version(gameSettings.rawVersion))
+                    {
+                        version = Properties.Resources.unsuported_version;
+                        msg = ("This mod does not support the current version (" + gameSettings.rawVersion + ") of the game." + System.Environment.NewLine
+    + "The mod supports version " + mod.supported_version);
+                        isSupported = false;
+                    }
+                    if (mod.tags != null && mod.tags?.Count > 0)
+                    {
+                        foreach (var tag in mod.tags)
+                        {
+                            if (tag.ToLower() == category.ToString().ToLower())
+                            {
+                                if (enabled_mods.Contains(mod.gameRegestryMod))
+                                {
+                                    currentCategory.Rows.Add(mod.picture, true, mod.displayName, version, mod.remote_fileid, msg);
+                                }
+                                else
+                                {
+                                    currentCategory.Rows.Add(mod.picture, false, mod.displayName, version, mod.remote_fileid, msg);
+
+                                }
+                            }
+                        }
+                    }
+                }
+                generatedTables.Add(currentCategory, category.ToString());
+            }
+        }
+        DataTable lastTable;
+        private void updateRowsFilter(string text, DataTable table)
+        {
+            if (lastTable == null)
+            {
+                 lastTable = (list_mods.DataSource as DataTable);
+            }
+            else {
+                if (lastTable.DefaultView.Count == 0 )
+                {
+                    if (list_mods.DataSource != imEmpty)
+                        list_mods.DataSource = imEmpty;
+                    lastTable.DefaultView.RowFilter = string.Format("NAME LIKE '{0}%'", text);
+
+                }
+                else
+                {
+                    list_mods.Columns["IMG"].Visible = false;
+                    list_mods.Columns["ID"].Visible = false;
+                    list_mods.Columns["MSG"].Visible = false;
+                    list_mods.Columns[0].Width = 75;
+                    list_mods.Columns[1].Width = 25;
+                    list_mods.Columns[3].Width = 30;
+                    list_mods.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    list_mods.DataSource = table;
+                    lastTable = (list_mods.DataSource as DataTable);
+                    (list_mods.DataSource as DataTable).DefaultView.RowFilter = string.Format("NAME LIKE '{0}%'", text);
+                }
+
+            }
+
+        }
+
+        private void updateCategories()
+        {
+            checkForMods();
+            if (categoriesBox.Text !=null && !String.IsNullOrEmpty(categoriesBox.Text) && !String.IsNullOrWhiteSpace(categoriesBox.Text) && !categoriesBox.DroppedDown)
+            {
+                for (int i = 0; i <= categoriesBox.Items.Count; i++)
+                {
+                    if (categoriesBox.SelectedItem.ToString() == categoriesBox.Items.IndexOf(i).ToString())
+                    {
+                        categoriesBox.SelectedItem = categoriesBox.Items.IndexOf(i);
+                    }
+                }
+            }
+            if (categoriesBox.SelectedItem == null || String.IsNullOrEmpty(categoriesBox.SelectedItem.ToString()) || String.IsNullOrWhiteSpace(categoriesBox.SelectedItem.ToString()))
+            {
+                if (modsTable.Rows.Count <= globalMods.Count)
+                {
+                    if (lastTable != modsTable)
+                    {
+                        lastTable = modsTable;
+                    }
+                    updateRowsFilter(textBox2.Text, modsTable);
+                }
+            }
+            else
+            {
+                foreach (var category in generatedTables) {
+                    if (category.Value == categoriesBox.SelectedItem.ToString())
+                    {if (lastTable != category.Key) {
+                            lastTable = category.Key;
+                        }
+                        updateRowsFilter(textBox2.Text, category.Key);
+                    }
+                }
+            }
+
+        }
+        public void checkForMods() {
+            foreach (var mod in globalMods)
+            {
+                foreach (DataGridViewRow row in list_mods.Rows)
+                {if (list_mods.DataSource != imEmpty)
+                    {
+                        if (Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
+                        {
+                            if (mod.displayName != null && !enabled_mods.Contains(mod.gameRegestryMod))
+                            {
+                                Logger("Checking: " + mod.displayName);
+                                enabled_mods.Add(mod.gameRegestryMod);
+                            }
+
+                        }
+                        else if (!Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
+                        {
+                            if (mod.displayName != null && enabled_mods.Contains(mod.gameRegestryMod))
+                            {
+                                Logger("Unchecking: " + mod.displayName);
+                                enabled_mods.Remove(mod.gameRegestryMod);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public void Logger(string log)
         {
             this.textBox1.InvokeEx(tx => tx.Text += "[" + DateTime.Now + "] " + log + System.Environment.NewLine);
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            textBox2.Text = "";
+            categoriesBox.SelectedIndex = -1;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow row in list_mods.Rows)
+            {
+                if (Convert.ToBoolean(row.Cells[1].Value)) {
+                    row.Cells[1].Value = false;
+                }
+            }
+        }
+
+        private void cellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            checkBox();
+        }
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+            if (String.IsNullOrEmpty(categoriesBox.Text))
+            {
+                updateRowsFilter(textBox2.Text, modsTable);
+            }
+            else {
+                updateRowsFilter(textBox2.Text, generatedTables.First(x => x.Value.Equals(categoriesBox.Text)).Key);
+            }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.Save();
+        }
+
+        private void list_mods_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if ((e.ColumnIndex == this.list_mods.Columns["VER"].Index)
+&& e.Value != null) {
+                DataGridViewCell cell =
+this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                if (!e.Value.Equals(null)) {
+                    cell.ToolTipText = (string)this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex+2].Value;
+                }
+            }
+        }
     }
+
 }
+
     public static class ISynchronizeInvokeExtensions
     {
         public static void InvokeEx<T>(this T @this, Action<T> action) where T : ISynchronizeInvoke
