@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -20,10 +21,10 @@ namespace Hoi4_Launcher.Utility
             {
                 RECT rc = (RECT)m.GetLParam(typeof(RECT));
                 //Adjust these values to suit, dependant upon Appearance
-                rc.Left -= 3;
-                rc.Right += 3;
+                rc.Left -= 4;
+                rc.Right += 4;
                 rc.Top -= 3;
-                rc.Bottom += 3;
+                rc.Bottom += 4;
                 Marshal.StructureToPtr(rc, m.LParam, true);
             }
             base.WndProc(ref m);
@@ -51,11 +52,13 @@ namespace Hoi4_Launcher.Utility
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(200, 100);
             this.tabControl1.TabIndex = 0;
+            this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
             // tabPage1
@@ -79,12 +82,24 @@ namespace Hoi4_Launcher.Utility
             this.tabPage2.UseVisualStyleBackColor = true;
             this.tabControl1.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.tabControl1.Invalidate();
 
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            TabPage page = this.tabControl1.TabPages[e.Index];
+            e.Graphics.FillRectangle(new SolidBrush(page.BackColor), e.Bounds);
+
+            Rectangle paddedBounds = e.Bounds;
+            int yOffset = (e.State == DrawItemState.Selected) ? -2 : 1;
+            paddedBounds.Offset(1, yOffset);
+            TextRenderer.DrawText(e.Graphics, page.Text, e.Font, paddedBounds, page.ForeColor);
         }
     }
 }

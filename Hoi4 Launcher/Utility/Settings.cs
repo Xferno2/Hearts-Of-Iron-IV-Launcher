@@ -1,5 +1,4 @@
 ﻿
-using Gecko;
 using Hoi4_Launcher.Parser;
 using System;
 using System.Collections.Generic;

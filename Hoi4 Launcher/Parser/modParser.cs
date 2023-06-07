@@ -62,7 +62,7 @@ namespace Hoi4_Launcher.Parser
                     //    {
                     //        if (mod.isPath)
                     //        {
-                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, modFile.Split('=')[1].Replace("\"", "")), 75, 75);
+                    //            mod.picture = Util.ResizeImage(Util.parseImage(mod.dirPath, ""), 75, 75);
                     //        }
                     //        else if (!mod.isPath)
                     //        {

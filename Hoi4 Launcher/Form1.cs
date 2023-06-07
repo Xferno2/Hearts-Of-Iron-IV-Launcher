@@ -14,16 +14,17 @@ using Timer = System.Timers.Timer;
 using Hoi4_Launcher.Utility;
 using System.Drawing.Imaging;
 using Hoi4_Launcher.Parser;
-using System.Reflection;
+using System.Reflection;    
 
 namespace Hoi4_Launcher
 {
     public partial class Form1 : MetroSet_UI.Forms.MetroSetForm
     {
-        private static string ParadoxFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive");
-        private static string Hoi4_Doc = Path.Combine(ParadoxFolder, "Hearts of Iron IV");
-        private static string Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
-        private static string Hoi4_Mods = Path.Combine(Hoi4_Doc, "mod");
+
+        private static string ParadoxFolder;
+        private static string Hoi4_Doc;
+        private static string Hoi4_Enb_Mods;
+        private static string Hoi4_Mods;
         private static dlcModel[] dis_dlc = null;
 
         private static List<newModInfo> globalMods;
@@ -52,7 +53,7 @@ namespace Hoi4_Launcher
             }
             InitializeComponent();
             var steamLink = new SteamLink { Dock = DockStyle.Fill, TopLevel = false };
-            panel2.Controls.Add(steamLink) ;
+            panel2.Controls.Add(steamLink);
             steamLink.Show();
             if (Properties.Settings.Default.generateDescriptor)
             {
@@ -77,7 +78,7 @@ namespace Hoi4_Launcher
             {
                 CreateParams cp = base.CreateParams;
                 cp.ExStyle |= 0x02000000; // Turn on WS_EX_COMPOSITED
-             //   cp.Style &= ~~0x02000000; // Turn off WS_CLIPCHILDREN
+                                          //   cp.Style &= ~~0x02000000; // Turn off WS_CLIPCHILDREN
                 return cp;
             }
         }
@@ -85,6 +86,29 @@ namespace Hoi4_Launcher
 
         private void Form1_Load_1(object sender, EventArgs e)
         {
+
+            InitializeModsTable();
+            InitializeSettings();
+
+            categoriesBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            Logger("Application arguments: " + (String.IsNullOrWhiteSpace(args) ? "null" : args));
+            this.DoubleBuffered = true;
+            Util.enableDoubleBuff(tabControl1);
+            Util.enableDoubleBuff(tabPage1);
+
+            dlcParser dlcParser = new dlcParser();
+            dis_dlc = dlcParser.GetDLCs();
+            userControl11._3rdParty = dlcParser.is3rdParty;
+
+
+            loadLancherData();
+
+
+            updateUI.Elapsed += updateUI_DoWork;
+            updateUI.Start();
+        }
+
+        private void InitializeModsTable() {
             modsTable.Columns.Add("IMG", typeof(Image));
             modsTable.Columns.Add("ENABLE", typeof(bool));
             modsTable.Columns.Add("NAME", typeof(string));
@@ -104,6 +128,8 @@ namespace Hoi4_Launcher
             list_mods.DefaultCellStyle.NullValue = null;
             list_mods.ReadOnly = true;
 
+            //list_mods.CellBackgroundImage = Hoi4_Launcher.Properties.Resources.button_Mod;
+
             imEmpty.Columns.Add("ph1", typeof(Nullable));
             imEmpty.Columns.Add("ph2", typeof(Nullable));
             imEmpty.Columns.Add("NAME", typeof(string));
@@ -111,8 +137,9 @@ namespace Hoi4_Launcher
             imEmpty.Columns.Add("ID", typeof(Nullable));
             imEmpty.Columns.Add("MSG", typeof(Nullable));
             imEmpty.Rows.Add(null, null, "Nothing here huh", null, null, null);
+        }
 
-
+        private void InitializeSettings() {
             //Release Candidate disable settings
             //Remove this when Finished
             Settings settingsForm = new Settings();
@@ -121,32 +148,22 @@ namespace Hoi4_Launcher
             settingsForm.Dock = DockStyle.Fill;
             panel1.Controls.Add(settingsForm);
             settingsForm.Show();
-
-
             panel1.AutoScroll = true;
-
-
-            categoriesBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            Logger("Application arguments: " + (String.IsNullOrWhiteSpace(args) ? "null" : args));
-            this.DoubleBuffered = true;
-            Util.enableDoubleBuff(tabControl1);
-            Util.enableDoubleBuff(tabPage1);
-            dlcParser dlcParser = new dlcParser();
-            dis_dlc = dlcParser.GetDLCs();
-            userControl11._3rdParty = dlcParser.is3rdParty;
-            load();
-            updateUI.Elapsed += updateUI_DoWork;
-            updateUI.Start();
         }
 
-        private void load()
+        private void loadLancherData()
         {
             //Load LHSetthings
             string data = File.ReadAllText(@"launcher-settings.json");
             gameSettings = JsonConvert.DeserializeObject<LHSettings>(data);
+            ParadoxFolder = gameSettings.gameDataPath.Replace('/','\\').Replace("%USER_DOCUMENTS%", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            Hoi4_Doc = ParadoxFolder;
+            Hoi4_Enb_Mods = Path.Combine(Hoi4_Doc, "dlc_load.json");
+            Hoi4_Mods = Path.Combine(Hoi4_Doc, "mod");
 
-            //Load Mods
-            var items = load_items();
+
+        //Load Mods
+        var items = loadLHSettings();
             globalMods = modParser.load_mods_info(Hoi4_Mods);
             categoriesBox.Items.AddRange(modParser.comboBoxCategories.ToArray());
             generateCategories();
@@ -162,7 +179,13 @@ namespace Hoi4_Launcher
                         +  "The mod supports version " + mod.supported_version);
                 }
                 if (items.enabled_mods.Contains(mod.gameRegestryMod)) { enabled = true; enabled_mods++; }
-                modsTable.Rows.Add(mod.picture, enabled, mod.displayName, version, mod.remote_fileid, msg);
+                if (mod.remote_fileid != null)
+                {
+                    modsTable.Rows.Add(mod.picture, enabled, mod.displayName, version, mod.remote_fileid, msg);
+                }
+                else {
+                    modsTable.Rows.Add(mod.picture, enabled, mod.displayName, version, mod.dirPath, msg);
+                }
 
             }
             updateModsCount(enabled_mods, globalMods.Count);
@@ -177,7 +200,7 @@ namespace Hoi4_Launcher
             label_version.Text += " " + gameSettings.version;
         }
 
-        public launchSettings load_items()
+        public launchSettings loadLHSettings()
         {
             launchSettings obj;
 
@@ -210,7 +233,7 @@ namespace Hoi4_Launcher
                     }
                 }
             }
-            var config = load_items();
+            var config = loadLHSettings();
             config.enabled_mods = enabled_mods;
             config.disabled_dlcs = disabled_dlc;
             SerializeConfig(config);
@@ -307,11 +330,20 @@ namespace Hoi4_Launcher
                             {
                                 if (enabled_mods.Contains(mod.gameRegestryMod))
                                 {
-                                    currentCategory.Rows.Add(mod.picture, true, mod.displayName, version, mod.remote_fileid, msg);
+                                    if (mod.remote_fileid != null)
+                                    { currentCategory.Rows.Add(mod.picture, true, mod.displayName, version, mod.remote_fileid, msg); }
+                                    else {
+                                        currentCategory.Rows.Add(mod.picture, true, mod.displayName, version, mod.dirPath, msg);
+                                    }
                                 }
                                 else
                                 {
-                                    currentCategory.Rows.Add(mod.picture, false, mod.displayName, version, mod.remote_fileid, msg);
+                                    if (mod.remote_fileid != null)
+                                    { currentCategory.Rows.Add(mod.picture, false, mod.displayName, version, mod.remote_fileid, msg); }
+                                    else
+                                    {
+                                        currentCategory.Rows.Add(mod.picture, false, mod.displayName, version, mod.dirPath, msg);
+                                    }
 
                                 }
                             }
@@ -397,7 +429,7 @@ namespace Hoi4_Launcher
                 foreach (DataGridViewRow row in list_mods.Rows)
                 {if (list_mods.DataSource != imEmpty)
                     {
-                        if (Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
+                        if (Convert.ToBoolean(row.Cells[1].Value) && (Convert.ToString(row.Cells[4].Value) == mod.remote_fileid || Convert.ToString(row.Cells[4].Value) == mod.dirPath))
                         {
                             if (mod.displayName != null && !enabled_mods.Contains(mod.gameRegestryMod))
                             {
@@ -406,7 +438,7 @@ namespace Hoi4_Launcher
                             }
 
                         }
-                        else if (!Convert.ToBoolean(row.Cells[1].Value) && Convert.ToString(row.Cells[4].Value) == mod.remote_fileid)
+                        else if (!Convert.ToBoolean(row.Cells[1].Value) && (Convert.ToString(row.Cells[4].Value) == mod.remote_fileid || Convert.ToString(row.Cells[4].Value) == mod.dirPath))
                         {
                             if (mod.displayName != null && enabled_mods.Contains(mod.gameRegestryMod))
                             {
@@ -458,6 +490,7 @@ namespace Hoi4_Launcher
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Properties.Settings.Default.Save();
+            updateUI.Stop();
         }
 
         private void list_mods_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -470,6 +503,16 @@ namespace Hoi4_Launcher
                     cell.ToolTipText = (string)this.list_mods.Rows[e.RowIndex].Cells[e.ColumnIndex+2].Value;
                 }
             }
+        }
+
+        private void userControl11_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void list_dlc_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 

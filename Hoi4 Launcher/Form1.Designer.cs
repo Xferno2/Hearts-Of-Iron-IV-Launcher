@@ -103,6 +103,7 @@
             this.userControl11.TabIndex = 4;
             this.userControl11.Text = "PLAY";
             this.userControl11.Click += new System.EventHandler(this.UserControl11_Click);
+            this.userControl11.Load += new System.EventHandler(this.userControl11_Load);
             // 
             // metroSetControlBox1
             // 
@@ -163,10 +164,10 @@
             this.tabPage1.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabPage1.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.listBG;
             this.tabPage1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.tabPage1.Location = new System.Drawing.Point(1, 27);
+            this.tabPage1.Location = new System.Drawing.Point(0, 27);
             this.tabPage1.Margin = new System.Windows.Forms.Padding(0);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Size = new System.Drawing.Size(542, 383);
+            this.tabPage1.Size = new System.Drawing.Size(544, 384);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "News";
             // 
@@ -174,11 +175,11 @@
             // 
             this.tabPage2.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.listBG;
             this.tabPage2.Controls.Add(this.list_dlc);
-            this.tabPage2.Location = new System.Drawing.Point(1, 27);
+            this.tabPage2.Location = new System.Drawing.Point(0, 27);
             this.tabPage2.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.tabPage2.Size = new System.Drawing.Size(542, 383);
+            this.tabPage2.Size = new System.Drawing.Size(544, 384);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "DLC";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -190,8 +191,9 @@
             this.list_dlc.FormattingEnabled = true;
             this.list_dlc.Location = new System.Drawing.Point(2, 3);
             this.list_dlc.Name = "list_dlc";
-            this.list_dlc.Size = new System.Drawing.Size(538, 377);
+            this.list_dlc.Size = new System.Drawing.Size(540, 378);
             this.list_dlc.TabIndex = 0;
+            this.list_dlc.SelectedIndexChanged += new System.EventHandler(this.list_dlc_SelectedIndexChanged);
             // 
             // tabPage3
             // 
@@ -205,10 +207,10 @@
             this.tabPage3.Controls.Add(this.categoriesBox);
             this.tabPage3.Controls.Add(this.label_category);
             this.tabPage3.Controls.Add(this.label_mods);
-            this.tabPage3.Location = new System.Drawing.Point(1, 27);
+            this.tabPage3.Location = new System.Drawing.Point(0, 27);
             this.tabPage3.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(542, 383);
+            this.tabPage3.Size = new System.Drawing.Size(544, 384);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Mods";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -255,6 +257,7 @@
             this.list_mods.AllowUserToResizeRows = false;
             this.list_mods.BackgroundColor = System.Drawing.SystemColors.Menu;
             this.list_mods.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.list_mods.CellBackgroundImage = null;
             this.list_mods.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
             this.list_mods.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -270,7 +273,7 @@
             this.list_mods.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.list_mods.EnableHeadersVisualStyles = false;
             this.list_mods.GridColor = System.Drawing.SystemColors.ActiveCaption;
-            this.list_mods.Location = new System.Drawing.Point(0, 86);
+            this.list_mods.Location = new System.Drawing.Point(0, 87);
             this.list_mods.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.list_mods.MultiSelect = false;
             this.list_mods.Name = "list_mods";
@@ -284,7 +287,7 @@
             this.list_mods.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.list_mods.RowHeadersVisible = false;
             this.list_mods.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.list_mods.Size = new System.Drawing.Size(542, 297);
+            this.list_mods.Size = new System.Drawing.Size(544, 297);
             this.list_mods.TabIndex = 9;
             this.list_mods.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cellClick);
             this.list_mods.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.list_mods_CellFormatting);
@@ -352,11 +355,11 @@
             this.tabPage4.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.listBG;
             this.tabPage4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.tabPage4.Controls.Add(this.panel1);
-            this.tabPage4.Location = new System.Drawing.Point(1, 27);
+            this.tabPage4.Location = new System.Drawing.Point(0, 27);
             this.tabPage4.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.tabPage4.Size = new System.Drawing.Size(542, 383);
+            this.tabPage4.Size = new System.Drawing.Size(544, 384);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Settings";
             // 
@@ -365,18 +368,18 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel1.Location = new System.Drawing.Point(2, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(541, 377);
+            this.panel1.Size = new System.Drawing.Size(541, 378);
             this.panel1.TabIndex = 0;
             // 
             // tabPage5
             // 
             this.tabPage5.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.listBG;
             this.tabPage5.Controls.Add(this.textBox1);
-            this.tabPage5.Location = new System.Drawing.Point(1, 27);
+            this.tabPage5.Location = new System.Drawing.Point(0, 27);
             this.tabPage5.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.tabPage5.Size = new System.Drawing.Size(542, 383);
+            this.tabPage5.Size = new System.Drawing.Size(544, 384);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Log";
             this.tabPage5.UseVisualStyleBackColor = true;
@@ -388,7 +391,7 @@
             this.textBox1.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(538, 377);
+            this.textBox1.Size = new System.Drawing.Size(540, 378);
             this.textBox1.TabIndex = 1;
             this.textBox1.Text = "";
             // 

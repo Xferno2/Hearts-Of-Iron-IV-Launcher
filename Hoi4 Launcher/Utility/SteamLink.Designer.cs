@@ -39,7 +39,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.steam_normal;
+            this.pictureBox1.BackgroundImage = global::Hoi4_Launcher.Properties.Resources.steam_disabled;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.pictureBox1.Location = new System.Drawing.Point(12, 4);
             this.pictureBox1.Name = "pictureBox1";
@@ -98,7 +98,7 @@
             this.userControl12.TabIndex = 19;
             this.userControl12.Text = "Log out";
             this.userControl12.Visible = false;
-            this.userControl12.Click += new System.EventHandler(this.userControl12_Click);
+//            this.userControl12.Click += new System.EventHandler(this.userControl12_Click);
             // 
             // toolTip1
             // 

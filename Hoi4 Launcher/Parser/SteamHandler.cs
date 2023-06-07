@@ -1,6 +1,4 @@
-﻿using Gecko;
-using HtmlAgilityPack;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -29,34 +27,32 @@ namespace Hoi4_Launcher.Parser
             { return true; }
             else { return false; }
         }
-        public void getUser(GeckoWebBrowser browser)
-        {
-            HtmlDocument content = new HtmlDocument();
-            content.LoadHtml(browser.Document.Body.OuterHtml);
-            if (content.DocumentNode.OuterHtml != null)
-            {
-                HtmlNode contentNode = content.DocumentNode.SelectSingleNode("//div[contains(@class,'playerAvatar')]");
-                string id = contentNode.ChildNodes[1].Attributes["href"].Value;
-                string user = id.Split('/')[4];
-                userAndID.Add(id);
-                userAndID.Add(user);
-            }
-        }
-        public Dictionary<string, Image> getModsImages(GeckoWebBrowser browser)
-        {
-            Dictionary<string, Image> modsIMG = new Dictionary<string, Image>();
-            var steamModsUrl = steamMods[0] + userAndID.Last() + steamMods[1];
-            browser.Navigate(steamModsUrl);
-            while (browser.IsBusy) {
-            };
-            HtmlDocument content = new HtmlDocument();
-            content.LoadHtml(browser.Document.Body.OuterHtml);
-            if (content.DocumentNode.OuterHtml != null)
-            {
-                HtmlNode contentNode = content.DocumentNode.SelectSingleNode("//div[contains(@class,'workshopBrowsePagingControls')]");
-                string lastEntri = contentNode.ChildNodes[contentNode.ChildNodes.Count - 2].InnerText;
-            }
-            return modsIMG;
-        }
+        //public void getUser(GeckoWebBrowser browser)
+        //{
+        //    HtmlDocument content = new HtmlDocument();
+        //    content.LoadHtml(browser.Document.Body.OuterHtml);
+        //    if (content.DocumentNode.OuterHtml != null)
+        //    {
+        //        HtmlNode contentNode = content.DocumentNode.SelectSingleNode("//div[contains(@class,'playerAvatar')]");
+        //        string id = contentNode.ChildNodes[1].Attributes["href"].Value;
+        //        string user = id.Split('/')[4];
+        //        userAndID.Add(id);
+        //        userAndID.Add(user);
+        //    }
+        //}
+        //public Dictionary<string, Image> getModsImages(GeckoWebBrowser browser)
+        //{
+        //    Dictionary<string, Image> modsIMG = new Dictionary<string, Image>();
+        //    var steamModsUrl = steamMods[0] + userAndID.Last() + steamMods[1];
+        //    browser.Navigate(steamModsUrl);
+        //    HtmlDocument content = new HtmlDocument();
+        //    content.LoadHtml(browser.Document.Body.OuterHtml);
+        //    if (content.DocumentNode.OuterHtml != null)
+        //    {
+        //        HtmlNode contentNode = content.DocumentNode.SelectSingleNode("//div[contains(@class,'workshopBrowsePagingControls')]");
+        //        string lastEntri = contentNode.ChildNodes[contentNode.ChildNodes.Count - 2].InnerText;
+        //    }
+        //    return modsIMG;
+        //}
     }
 }

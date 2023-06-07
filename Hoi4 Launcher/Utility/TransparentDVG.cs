@@ -14,9 +14,12 @@ namespace Hoi4_Launcher.Utility
     {
         private DataGridView dataGridView1;
 
+        public Image CellBackgroundImage { get; set; }
+        private Image[] CellBackgroundImageDevided { get; set; }
+
         public TransparentDVG() {
             this.BorderStyle = BorderStyle.None;
-
+            InitializeComponent();
         }
 
 
@@ -79,8 +82,13 @@ namespace Hoi4_Launcher.Utility
             this.dataGridView1.Size = new System.Drawing.Size(240, 150);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.dataGridView1.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.dataGridView1_CellPainting);
             this.dataGridView1.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dataGridView1_RowPostPaint);
             this.dataGridView1.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.dataGridView1_RowPrePaint);
+            // 
+            // TransparentDVG
+            // 
+            this.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.dataGridView1_CellPainting);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this)).EndInit();
             this.ResumeLayout(false);
@@ -99,6 +107,55 @@ namespace Hoi4_Launcher.Utility
         private void dataGridView1_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
         {
             e.Graphics.DrawImage(Hoi4_Launcher.Properties.Resources.button_Mod, e.RowBounds);
+        }
+
+        void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (this.CellBackgroundImageDevided == null)
+            {
+                if (CellBackgroundImage != null)
+                {
+                    List<Rectangle> rectagles = new List<Rectangle>();
+                    foreach (DataGridViewColumn column in this.dataGridView1.Columns.Cast<DataGridViewColumn>())
+                    {
+                        if (rectagles.Count != 0)
+                        {
+                            //TO DO
+                            rectagles.Add(new Rectangle(new Point(rectagles.Last().X + column.Width, 0), new Size(column.Width, this.dataGridView1.RowTemplate.Height)));
+                        }
+                        else
+                        {
+                            rectagles.Add(new Rectangle(new Point(0, 0), new Size(column.Width, this.dataGridView1.RowTemplate.Height)));
+                        }
+                    }
+                    CellBackgroundImageDevided = resizeImageForCell(CellBackgroundImage, rectagles.ToArray());
+                }
+                if (e.RowIndex != -1 && this.CellBackgroundImage != null)
+                {
+                    if ((e.PaintParts & DataGridViewPaintParts.Background) != DataGridViewPaintParts.None)
+                    {
+                        e.Graphics.DrawImage(CellBackgroundImageDevided[e.ColumnIndex], e.CellBounds);
+                    }
+                    if (!e.Handled)
+                    {
+                        e.Handled = true;
+                        e.PaintContent(e.CellBounds);
+                    }
+                }
+            }
+        }
+
+        private Image[] resizeImageForCell(Image image, params Rectangle[] rectangles) {
+            List<Image> imageList = new List<Image>();
+            foreach (var rectangle in rectangles) {
+                var bitmap = new Bitmap(rectangle.Width, rectangle.Height);
+                using (var g = Graphics.FromImage(bitmap))
+                {
+                    g.DrawImage(image, 0, 0, rectangle, GraphicsUnit.Pixel);
+                    imageList.Add(bitmap);
+                }
+            }
+            return imageList.ToArray();
         }
     }
 }
